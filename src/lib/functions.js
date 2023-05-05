@@ -161,10 +161,11 @@ let RelaysforSeach = [
 ];
 
 /**
-* @param { string[]} idList
-* @return {Promise<{[key:string]: import("nostr-tools").Event}>};//, string[]]>};
-*/
-export async function getEvent(idList) {
+ * @param {string[]} idList
+ * @return {Promise<{[key: string]: import("nostr-tools").Event;}>} ;//, string[]]>};
+ * @param {string[]} RelaysforSeach
+ */
+export async function getEvent(idList , RelaysforSeach) {
     /**
      * 
      */
@@ -212,10 +213,11 @@ export async function getEvent(idList) {
 
 
 /**
-* @param {string[]} pubkeyList
-* @return {Promise<{[key:string]:import("nostr-tools").Event}>} key:pubkeyごとのprofileEvent
-*/
-export async function getProfile(pubkeyList) {
+ * @param {string[]} pubkeyList
+ * @return {Promise<{[key: string]: import("nostr-tools").Event;}>} key:pubkeyごとのprofileEvent
+ * @param {string[]} RelaysforSeach
+ */
+export async function getProfile(pubkeyList,RelaysforSeach) {
     let profiles = pubkeyList.reduce((list, id) => {
         // @ts-ignore
         list[id] = "";
@@ -314,8 +316,9 @@ export async function postEvent(noteID, _event, relays) {
 
 /**
  * @param {any} noteHexId
+ * @param {string[]} RelaysforSeach
  */
-export async function getSingleEvent(noteHexId) {
+export async function getSingleEvent(noteHexId,RelaysforSeach) {
     /**
     * @type {import("nostr-tools").Event}
     */

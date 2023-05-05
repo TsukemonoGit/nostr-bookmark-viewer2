@@ -1,8 +1,10 @@
 <script>
-	import { nip19 } from 'nostr-tools';
-	import { pubToHex } from '../lib/functions.js';
-	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+    import { goto } from '$app/navigation';
+  
+    import { nip19 } from "nostr-tools";
+	import { pubToHex } from '../lib/functions.js';
+
 
 	let inputPubkey = '';
 	let relay = '';
@@ -21,8 +23,10 @@
         if(naddr!=null){
             const address = nip19.decode(naddr);
             console.log(address);
+            // @ts-ignore
             pubkey=address.data.pubkey;
             inputPubkey=pubkey;
+            // @ts-ignore
             relay=address.data.relays[0];
         }
         console.log(naddr);
