@@ -2,6 +2,7 @@
 	import { nip19 } from 'nostr-tools';
 	import { pubToHex } from '../lib/functions.js';
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	let inputPubkey = '';
 	let relay = '';
@@ -12,6 +13,21 @@
 	let message = '';
 	let pubkey = '';
     let naddr="";
+
+    //コンポーネントが最初に DOM にレンダリングされた後に実行されます(?)
+    onMount(async () => {
+        //local strageに naddr が保存されていたら展開する
+        let naddr = localStorage.getItem("naddr");
+        if(naddr!=null){
+            const address = nip19.decode(naddr);
+            console.log(address);
+            pubkey=address.data.pubkey;
+            inputPubkey=pubkey;
+            relay=address.data.relays[0];
+        }
+        console.log(naddr);
+    });
+
 	async function onClickNip07() {
 		// @ts-ignore
 		inputPubkey = await window.nostr.getPublicKey();
@@ -22,7 +38,8 @@
 		relays = Object.keys(tmp);
 		console.log(relays);
 	}
-	async function onClickNext() {
+	
+    async function onClickNext() {
 		message = '';
 		console.log('next');
 
@@ -59,6 +76,8 @@
         await goto(naddr);
     }
 
+    //--------------------------------------------------------
+
 	async function checkExistUrl() {
 		let protocol, urlstr;
 		if (relay.startsWith('ws://')) {
@@ -75,7 +94,7 @@
 		//console.log('protocol:', protocol); // 'ws'または'wss'が出力される
 		//console.log('url:', urlstr); // ws://またはwss://以降の文字列が出力される
 
-        //そのURLのリレーが存在するか確認
+        //そのURLのリレーが存在するか確認  NIP11
         let url =new URL("https://" + urlstr);
        
         let header = new Headers();
@@ -88,8 +107,6 @@
         }catch{
             throw new Error('error');
         }
-        
-        
 	}
 
 	function makeNaddr() {
@@ -102,10 +119,11 @@
 			kind: 30001,
 			relays: [relay]
 		};
-		return nip19.naddrEncode(address);
-	
+		return nip19.naddrEncode(address);	
 	}
+
 </script>
+
 
 <div class="main">
 	<p class="hazimeni">
