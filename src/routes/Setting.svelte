@@ -1,13 +1,17 @@
 <script>
-	import { FileButton, ListBoxItem } from '@skeletonlabs/skeleton';
-	//import {}from 'nostr-tools';
+	import { nip19 } from 'nostr-tools';
+	import { pubToHex } from '../lib/functions.js';
+	import { goto } from '$app/navigation';
+
 	let inputPubkey = '';
 	let relay = '';
-	let relaysDisabled = false;
 	/**
 	 * @type {string | string[]}
 	 */
 	let relays = [];
+	let message = '';
+	let pubkey = '';
+    let naddr="";
 	async function onClickNip07() {
 		// @ts-ignore
 		inputPubkey = await window.nostr.getPublicKey();
@@ -18,9 +22,89 @@
 		relays = Object.keys(tmp);
 		console.log(relays);
 	}
-	function onClickNext(){
-        console.log("next");
+	async function onClickNext() {
+		message = '';
+		console.log('next');
+
+        //npubチェック
+		try {
+			pubkey = pubToHex(inputPubkey);
+			console.log(pubkey);
+			
+		} catch {
+			message = message + 'pubkeyを確認してください';
+		    return;
+        }
+
+        //リレーチェック
+		try {
+			await checkExistUrl();
+		} catch {
+			message = message + 'リレーを確認してください';
+		    return;
+        }
+
+
+        try{
+		   naddr= makeNaddr();
+        }catch{
+            console.log("naddrerror");
+            return;
+        }
+		console.log(message);
+        console.log(naddr);
+        //ローカルストレージに保存
+        localStorage.setItem('naddr', naddr);
+        //次へ
+        await goto(naddr);
     }
+
+	async function checkExistUrl() {
+		let protocol, urlstr;
+		if (relay.startsWith('ws://')) {
+			// inputValueがws://から始まる場合
+			protocol = 'ws';
+			urlstr = relay.slice(5); // ws://の部分を削除した残りの文字列を取得する
+		} else if (relay.startsWith('wss://')) {
+			// inputValueがwss://から始まる場合
+			protocol = 'wss';
+			urlstr = relay.slice(6); // wss://の部分を削除した残りの文字列を取得する
+		} else {
+			throw new Error('error');
+		}
+		//console.log('protocol:', protocol); // 'ws'または'wss'が出力される
+		//console.log('url:', urlstr); // ws://またはwss://以降の文字列が出力される
+
+        //そのURLのリレーが存在するか確認
+        let url =new URL("https://" + urlstr);
+       
+        let header = new Headers();
+        header.set("Accept","application/nostr+json");
+        try{
+        let response = await fetch(url,{headers: header});
+        console.log(response.status);
+        console.log(await response.json());
+        //.then(response=> console.log(response.json()))
+        }catch{
+            throw new Error('error');
+        }
+        
+        
+	}
+
+	function makeNaddr() {
+		/**
+		 * @type {import("nostr-tools/lib/nip19").AddressPointer }
+		 */
+		const address = {
+			identifier: '', //it is the identifier (the "d" tag) of the event being referenced
+			pubkey: pubkey,
+			kind: 30001,
+			relays: [relay]
+		};
+		return nip19.naddrEncode(address);
+	
+	}
 </script>
 
 <div class="main">
@@ -39,7 +123,7 @@
 
 	<div class="content">
 		<p>リレー(relay)</p>
-		<input class="input" type="text" bind:value={relay} placeholder="wss://..." />
+		<input class="input-group" type="text" bind:value={relay} placeholder="wss://..." />
 		{#if relays.length > 0}
 			<select class="select" bind:value={relay}>
 				{#each relays as relay, index}
@@ -49,11 +133,17 @@
 		{/if}
 	</div>
 
-
-<button type="button" id="btn1" class="btn variant-filled-secondary" on:click={onClickNext}
+	<button type="button" id="btn1" class="btn variant-filled-secondary" on:click={onClickNext}
 		>Next →</button
 	>
+
+    {#if message!=""}
+    <hr>
+    <error>{message}</error>
+    {/if}
+    
 </div>
+
 <style>
 	.main {
 		margin: 1em;
