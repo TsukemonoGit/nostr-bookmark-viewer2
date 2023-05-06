@@ -3,8 +3,24 @@
 	import { onMount } from 'svelte';
 
 	import { nip19 } from 'nostr-tools';
-	import { formatBookmark, getBookmarks } from '../../lib/functions';
-	import { Tab, TabGroup } from '@skeletonlabs/skeleton';
+	import {
+		formatBookmark,
+		formatPubkeyList,
+		getBookmarks,
+		getEvent,
+		getProfile
+	} from '../../lib/functions';
+	import {
+		AppShell,
+		ListBox,
+		ListBoxItem,
+		ProgressRadial,
+		Tab,
+		TabGroup,
+		popup
+	} from '@skeletonlabs/skeleton';
+
+	import PopupMenu from './PopupMenu.svelte';
 
 	let pubkey = '';
 	let relay = '';
@@ -12,18 +28,38 @@
 	 * @type {import('nostr-tools').Event[]}
 	 */
 	let bookmarks = [];
+
 	let tabSet = '';
 	/**
 	 * @type {{ [x: string]: string[]}}　タグごとのイベントIDリスト
 	 */
 	let bookmarkList = {};
 
+	/**@type {{ [key:string]:import('nostr-tools').Event}} */
+	let eventList = {};
+	/**@type {string[]} */
+	let idList = [];
+
+	/**@type {{ [key:string]:import('nostr-tools').Event | ''}} */
+	let localProfile = {};
+
 	/**
-	 * @type {string[]}
+	 * @type {{ pubkey: string; icon:string ; id: string ; name: string; display_name:string;date:string;content:string; isMenuOpen:boolean}[] }
 	 */
-	let viewTest;
+	let viewItem;
+	//イベント内容検索用リレーたち
+	let RelaysforSeach = [
+		//"wss://relay.nostr.band",
+		//"wss://nostr.wine",
+		//"wss://universe.nostrich.land",
+		//"wss://relay.damus.io",
+		'wss://nostream.localtest.me'
+	];
+
 	//まずうらるを確認してnpubとrelayをとります
 	//（次へから来てない可能性もあるため）
+	// @ts-ignore
+	//$: viewTest = bookmarkList[tabSet]; //タブセットによって変わるのを検知して変わる
 
 	//コンポーネントが最初に DOM にレンダリングされた後に実行されます(?)
 	onMount(async () => {
@@ -38,17 +74,145 @@
 
 			bookmarks = await getBookmarks(pubkey, relay);
 			console.log(bookmarks);
-			tabSet=bookmarks[0].tags[0][1];
-			bookmarkList = formatBookmark(bookmarks);
+			tabSet = bookmarks[0].tags[0][1];
+
+			await collectEvents();
+			try {
+				viewItem = arrangeEvents(idList);
+			} catch (error) {
+				console.log(error);
+			}
 		} catch {
 			const errorMessage = 'naddr decode error';
 			console.log(errorMessage);
 		}
 	});
-	
-	
-	
-	$:viewTest = bookmarkList[tabSet] ;
+
+	async function collectEvents() {
+		bookmarkList = formatBookmark(bookmarks);
+		console.log(bookmarkList);
+		/**
+		 * @type {string[]}
+		 */
+		idList = [];
+		for (const key in bookmarkList) {
+			idList = [...idList, ...bookmarkList[key]];
+		}
+		console.log(idList);
+
+		//localStrageちぇっく-------------------------------------
+
+		eventList = await getEvent(idList, RelaysforSeach);
+		console.log(eventList);
+		const pubkeyList = await formatPubkeyList(eventList);
+		console.log(pubkeyList);
+		//localStrageちぇっく-------------------------------------
+		let getPubkeyList = pubkeyList;
+		const localtmp = localStorage.getItem('profile');
+		/**@type {{[key:string]:import('nostr-tools').Event|""}}*/
+
+		if (localtmp != null) {
+			localProfile = JSON.parse(localtmp);
+			//delete localProfile['undefined'];
+			console.log(localProfile);
+			for (const key in localProfile) {
+				if (pubkeyList.includes(key) && localProfile[key] != '') {
+					const index = getPubkeyList.indexOf(key);
+					getPubkeyList.splice(index, 1);
+				}
+			}
+		}
+		let profiles = {};
+		console.log(getPubkeyList[0] !== undefined);
+		if (getPubkeyList.length > 0 && getPubkeyList[0] !== undefined) {
+			profiles = await getProfile(getPubkeyList, RelaysforSeach); //key=pubkey,value=profile
+		}
+		localProfile = { ...localProfile, ...profiles };
+
+		localStorage.setItem('profile', JSON.stringify(localProfile));
+		console.log(localProfile);
+
+		//ととのえる
+	}
+	//イベントIDごとに情報をまとめる
+	/**
+	 * @param {string[]} _idList
+	 */
+	function arrangeEvents(_idList) {
+		let notes = [];
+		for (let i = 0; i < _idList.length; i++) {
+			const thisId = _idList[i];
+			const author = eventList[thisId].pubkey;
+			console.log(localProfile[author]);
+
+			notes[i] = {
+				id: nip19.noteEncode(thisId),
+				content: eventList[thisId].content,
+				date: new Date(eventList[thisId].created_at * 1000).toLocaleString(),
+				pubkey: 'unknown',
+				name: 'unknown',
+				display_name: 'unknown',
+				icon: 'unknown',
+				isMenuOpen: false //メニューの開閉状態
+			};
+			try {
+				notes[i].pubkey = nip19.npubEncode(author);
+			} catch {}
+			try {
+				// @ts-ignore
+				const thisProfile = JSON.parse(localProfile[author].content);
+				notes[i].name = thisProfile.name;
+				notes[i].display_name = thisProfile.display_name;
+				notes[i].icon = thisProfile.picture;
+			} catch {}
+		}
+		console.log(notes);
+		return notes;
+	}
+
+	/**@type {import('@skeletonlabs/skeleton').PopupSettings}*/
+	let comboboxValue;
+	/**@type {import('@skeletonlabs/skeleton').PopupSettings}*/
+	let popupSettings = {
+		event: 'focus-click',
+		target: 'combobox'
+		//placement: 'bottom',
+		// Close the popup when the item is clicked
+		//closeQuery: '.listbox-item'
+	};
+	/**
+	 * @type {string}
+	 */
+	let nowViewID;
+	/**
+	 * @param {string} _id
+	 */
+	function onClickMenu(_id) {
+		// @ts-ignore
+		viewItem[idList.indexOf(_id)].isMenuOpen = !viewItem[idList.indexOf(_id)].isMenuOpen;
+		if (viewItem[idList.indexOf(_id)].isMenuOpen) {
+			nowViewID = _id;
+		}
+		console.log(viewItem[idList.indexOf(_id)].isMenuOpen);
+	}
+
+	/**
+	 * @param {CustomEvent} item
+	 */
+	function handleItemClick(item) {
+		console.log(item.detail.name,nowViewID);
+		switch (item.detail.name) {
+			case 'copy':
+				break;
+			case 'open':
+				break;
+			case 'delete':
+				break;
+			default:
+				viewItem[idList.indexOf(nowViewID)].isMenuOpen = false;
+				break;
+		}
+	}
 </script>
 
 <div>
@@ -64,7 +228,7 @@
 <hr />
 
 {#await getBookmarks}
-	通信中
+	<ProgressRadial ... stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
 {:then book}
 	<TabGroup>
 		{#each bookmarks as bookmark}
@@ -75,11 +239,89 @@
 		<!-- Tab Panels --->
 
 		<svelte:fragment slot="panel">
-			{#if viewTest != null}
-				{#each viewTest as bookmarkTag, index}
-					<div>{bookmarkTag}</div>
+			{#if viewItem != null}
+				{#each bookmarkList[tabSet] as id, index}
+					<div class="note">
+						<AppShell>
+							<svelte:fragment slot="sidebarLeft">
+								<div class="icon-area">
+									<img class="icon" src={viewItem[idList.indexOf(id)].icon} alt="icon" />
+								</div>
+							</svelte:fragment>
+
+							<svelte:fragment slot="pageHeader">
+								<div class="header">
+									<div class="display_name">
+										{viewItem[idList.indexOf(id)].display_name}
+									</div>
+									<div class="name">@{viewItem[idList.indexOf(id)].name}</div>
+									<div class="date">{viewItem[idList.indexOf(id)].date}</div>
+								</div>
+							</svelte:fragment>
+
+							<svelte:fragment slot="sidebarRight">
+								<button class="btn1 btn-icon btn-icon-sm variant-filled-primary" on:click={onClickMenu(id)} style="position:relative">▼</button>
+
+								{#if viewItem[idList.indexOf(id)].isMenuOpen}
+									<PopupMenu on:item-click={handleItemClick} />
+								{/if}
+							</svelte:fragment>
+
+							<!-- Router Slot -->
+							<slot>
+								{viewItem[idList.indexOf(id)].content}
+							</slot>
+
+							<!-- ---- / ---- -->
+						</AppShell>
+					</div>
 				{/each}
 			{/if}
 		</svelte:fragment>
 	</TabGroup>
 {/await}
+
+<style>
+	.icon-area {
+		margin-right: 1em;
+	}
+	.icon {
+		width: 50px;
+		height: 50px;
+		border-radius: 50%;
+	}
+	.note {
+		border: solid 1px rgb(88, 88, 88);
+		word-break: break-all;
+		margin: 0.5em;
+		padding: 1em;
+		border-radius: 0.5em;
+	}
+	.date {
+		display: inline;
+		font-weight: bold;
+		font-size: smaller;
+		margin-left: auto;
+		text-align: end;
+		margin-right: 5px;
+		
+	}
+	.display_name {
+		display: inline;
+		font-weight: bold;
+	}
+	.name {
+		display: inline;
+		margin-left: 5px;
+		font-weight: normal;
+		font-size: smaller;
+		align-items: flex-end;
+	}
+	.header {
+		display: flex;
+		width: 100%;
+	}
+	.btn1 {
+		border-radius: 51em;
+	}
+</style>

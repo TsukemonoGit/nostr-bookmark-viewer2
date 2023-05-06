@@ -214,7 +214,7 @@ export async function getEvent(idList , RelaysforSeach) {
 
 /**
  * @param {string[]} pubkeyList
- * @return {Promise<{[key: string]: import("nostr-tools").Event;}>} key:pubkeyごとのprofileEvent
+ * @return {Promise<{[key: string]: import("nostr-tools").Event|""}>} key:pubkeyごとのprofileEvent
  * @param {string[]} RelaysforSeach
  */
 export async function getProfile(pubkeyList,RelaysforSeach) {
