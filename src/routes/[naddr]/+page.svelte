@@ -17,7 +17,9 @@
 		ProgressRadial,
 		Tab,
 		TabGroup,
-		popup
+		Toast,
+		popup,
+		toastStore
 	} from '@skeletonlabs/skeleton';
 
 	import PopupMenu from './PopupMenu.svelte';
@@ -200,11 +202,35 @@
 	 * @param {CustomEvent} item
 	 */
 	function handleItemClick(item) {
-		console.log(item.detail.name,nowViewID);
+		console.log(item.detail.name, nowViewID);
 		switch (item.detail.name) {
 			case 'copy':
+				navigator.clipboard.writeText(viewItem[idList.indexOf(nowViewID)].id).then(
+					() => {// コピーに成功したときの処理
+						console.log('copyed: ' + viewItem[idList.indexOf(nowViewID)].id);
+						/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+						const t = {
+							message: 'copyed: ' + viewItem[idList.indexOf(nowViewID)].id,
+							timeout: 3000
+						};
+						toastStore.trigger(t);
+					},
+					() => {// コピーに失敗したときの処理
+						console.log('コピー失敗');
+						/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+						const t = {
+							message: 'failed to copy',
+							timeout: 3000
+						};
+						toastStore.trigger(t);
+					}
+				);
 				break;
 			case 'open':
+			window.open(
+                    "https://nostx.shino3.net/" + viewItem[idList.indexOf(nowViewID)].id,
+                    "_blank"
+                );
 				break;
 			case 'delete':
 				break;
@@ -215,6 +241,8 @@
 	}
 </script>
 
+
+<Toast />
 <div>
 	<ul class="list-dl">
 		<li>
@@ -260,7 +288,11 @@
 							</svelte:fragment>
 
 							<svelte:fragment slot="sidebarRight">
-								<button class="btn1 btn-icon btn-icon-sm variant-filled-primary" on:click={onClickMenu(id)} style="position:relative">▼</button>
+								<button
+									class="btn1 btn-icon btn-icon-sm variant-filled-primary"
+									on:click={onClickMenu(id)}
+									style="position:relative">▼</button
+								>
 
 								{#if viewItem[idList.indexOf(id)].isMenuOpen}
 									<PopupMenu on:item-click={handleItemClick} />
@@ -304,7 +336,6 @@
 		margin-left: auto;
 		text-align: end;
 		margin-right: 5px;
-		
 	}
 	.display_name {
 		display: inline;

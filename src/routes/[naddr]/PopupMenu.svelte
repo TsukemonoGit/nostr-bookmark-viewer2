@@ -9,7 +9,7 @@
 		dispatch('item-click', item);
 	}
 
-	const items = [{ name: 'copy' }, { name: 'open' }, { name: 'delete' }, { name: 'back' }];
+	const items = [{ name: 'copy' }, { name: 'open' }, { name: 'delete' }, { name: 'close' }];
 </script>
 
 <button class="back" on:click={() => handleClick(items[3])}>
