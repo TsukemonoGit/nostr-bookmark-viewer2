@@ -8,7 +8,8 @@
 		formatPubkeyList,
 		getBookmarks,
 		getEvent,
-		getProfile
+		getProfile,
+		removeEvent
 	} from '../../lib/functions';
 	import {
 		AppShell,
@@ -201,12 +202,13 @@
 	/**
 	 * @param {CustomEvent} item
 	 */
-	function handleItemClick(item) {
+	async function handleItemClick(item) {
 		console.log(item.detail.name, nowViewID);
 		switch (item.detail.name) {
 			case 'copy':
 				navigator.clipboard.writeText(viewItem[idList.indexOf(nowViewID)].id).then(
-					() => {// コピーに成功したときの処理
+					() => {
+						// コピーに成功したときの処理
 						console.log('copyed: ' + viewItem[idList.indexOf(nowViewID)].id);
 						/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 						const t = {
@@ -215,7 +217,8 @@
 						};
 						toastStore.trigger(t);
 					},
-					() => {// コピーに失敗したときの処理
+					() => {
+						// コピーに失敗したときの処理
 						console.log('コピー失敗');
 						/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 						const t = {
@@ -227,20 +230,70 @@
 				);
 				break;
 			case 'open':
-			window.open(
-                    "https://nostx.shino3.net/" + viewItem[idList.indexOf(nowViewID)].id,
-                    "_blank"
-                );
+				window.open('https://nostx.shino3.net/' + viewItem[idList.indexOf(nowViewID)].id, '_blank');
 				break;
 			case 'delete':
+				/**@type {number}*/
+				let nowIndex;
+
+				//-----------------------------------------------ここびみょう
+				//bookmark[]のどれが今のタグかわからへん
+				for (let i = 0; i < bookmarks.length; i++) {
+					if (bookmarks[i].tags[0][1] == tabSet) {
+						nowIndex = i;
+					}
+				}
+				/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+				const t = await {
+					message: `delete note (${viewItem[idList.indexOf(nowViewID)].id.slice(0,10)}...)`,
+					action: {
+						label: 'DELETE',
+						response: () => deleteNote(nowIndex)
+					},
+					timeout: 10000,
+
+					//background:
+					//	'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white width-filled'
+				};
+				toastStore.trigger(t);
 				break;
 			default:
 				viewItem[idList.indexOf(nowViewID)].isMenuOpen = false;
 				break;
 		}
 	}
+	/**
+	 * @param {number} nowIndex
+	 */
+	async function deleteNote(nowIndex) {
+		console.log(nowViewID);
+		const event = await removeEvent(nowViewID, bookmarks[nowIndex], [relay]);
+		console.log(event);
+		if (event != null) {
+			bookmarks[nowIndex] = event;
+			await collectEvents();
+			try {
+				viewItem = arrangeEvents(idList);
+			} catch (error) {
+				console.log(error);
+				/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+			const t = {
+							message: `${error}`,
+							timeout: 3000
+						};
+						toastStore.trigger(t);
+			}
+		} else {
+			console.log('削除に失敗したかも');
+			/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+			const t = {
+							message: 'failed to delete',
+							timeout: 3000
+						};
+						toastStore.trigger(t);
+		}
+	}
 </script>
-
 
 <Toast />
 <div>
