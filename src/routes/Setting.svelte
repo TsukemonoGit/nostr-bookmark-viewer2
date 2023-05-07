@@ -62,7 +62,7 @@
 			await checkExistUrl();
 		} catch {
 			message = message + 'リレーを確認してください';
-		    return;
+		   return;
         }
 
 
@@ -81,17 +81,19 @@
     }
 
     //--------------------------------------------------------
-
+	let url;
 	async function checkExistUrl() {
 		let protocol, urlstr;
 		if (relay.startsWith('ws://')) {
 			// inputValueがws://から始まる場合
 			protocol = 'ws';
 			urlstr = relay.slice(5); // ws://の部分を削除した残りの文字列を取得する
+			url =new URL("http://" + urlstr);
 		} else if (relay.startsWith('wss://')) {
 			// inputValueがwss://から始まる場合
 			protocol = 'wss';
 			urlstr = relay.slice(6); // wss://の部分を削除した残りの文字列を取得する
+			url =new URL("https://" + urlstr);
 		} else {
 			throw new Error('error');
 		}
@@ -99,7 +101,6 @@
 		//console.log('url:', urlstr); // ws://またはwss://以降の文字列が出力される
 
         //そのURLのリレーが存在するか確認  NIP11
-        let url =new URL("https://" + urlstr);
        
         let header = new Headers();
         header.set("Accept","application/nostr+json");
