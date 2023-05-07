@@ -44,15 +44,15 @@
 	let event30001; //受信したイベントたち（修正するときに使う）
 	/**@type {string}*/
 	let relay;
-	
+
 	/**
-	 * @type {never[][] | undefined}
+	 * @type {{[key:string]:{id:string;noteId:string;isMenuOpen:boolean;date:string;name:string;icon:string;display_name:string;content:string}[]} | undefined}
 	 */
-	let viewItem;
+	let viewItem = {};
 	/**
 	 * @type {string }
 	 */
-	let tabSet;
+	let tabSet = '';
 	/**
 	 * @type {string[]}
 	 */
@@ -60,70 +60,71 @@
 
 	//コンポーネントが最初に DOM にレンダリングされた後に実行されます(?)
 	onMount(async () => {
-		//try {
-		const address = nip19.decode($page.params.naddr);
-		// @ts-ignore
-		pubkey = address.data.pubkey;
-		// @ts-ignore
-		relay = address.data.relays[0];
-		//console.log(pubkey);
-		//console.log(relay);
-		event30001 = await getBookmarks(pubkey, relay); //30001イベント受信
-		for (let i = 0; i < event30001.length; i++) {
-			console.log(event30001[i].tags[0][1]);
-			tagList[i] = event30001[i].tags[0][1];
-		}
-		tabSet=tagList[0];
-		const fBookmark = formatBookmark(event30001);
-		/** @type {string[]}*/
-		let idList = [];
-		for (const key in fBookmark) {
-			idList = [...idList, ...fBookmark[key]];
-		}
-		const noteList = await getEvent(idList, RelaysforSeach); //1イベント受信
-		const pubkeyList = formatPubkeyList(noteList);
+		try {
+			const address = nip19.decode($page.params.naddr);
+			// @ts-ignore
+			pubkey = address.data.pubkey;
+			// @ts-ignore
+			relay = address.data.relays[0];
+			//console.log(pubkey);
+			//console.log(relay);
+			event30001 = await getBookmarks(pubkey, relay); //30001イベント受信
+			tagList = event30001.map((event) => event.tags[0][1]);
+			console.log(tagList[0]);
+			if (tagList.length > 0) {
+				tabSet = tagList[0];
+			}
 
-		//localStrageちぇっく
-		//--------------------------------------------------------
-		let localProfile;
-		let getPubkeyList = pubkeyList;
-		const localtmp = localStorage.getItem('profile');
-		/**@type {{[key:string]:import('nostr-tools').Event|""}}*/
-		if (localtmp != null) {
-			localProfile = JSON.parse(localtmp);
-			//delete localProfile['undefined'];
-			console.log(localProfile);
-			for (const key in localProfile) {
-				if (pubkeyList.includes(key) && localProfile[key] != '') {
-					const index = getPubkeyList.indexOf(key);
-					getPubkeyList.splice(index, 1);
+			const fBookmark = formatBookmark(event30001);
+			/** @type {string[]}*/
+			let idList = [];
+			for (const key in fBookmark) {
+				idList = [...idList, ...fBookmark[key]];
+			}
+			const noteList = await getEvent(idList, RelaysforSeach); //1イベント受信
+			const pubkeyList = formatPubkeyList(noteList);
+
+			//localStrageちぇっく
+			//--------------------------------------------------------
+			let localProfile;
+			let getPubkeyList = pubkeyList;
+			const localtmp = localStorage.getItem('profile');
+			/**@type {{[key:string]:import('nostr-tools').Event|""}}*/
+			if (localtmp != null) {
+				localProfile = JSON.parse(localtmp);
+				//delete localProfile['undefined'];
+				console.log(localProfile);
+				for (const key in localProfile) {
+					if (pubkeyList.includes(key) && localProfile[key] != '') {
+						const index = getPubkeyList.indexOf(key);
+						getPubkeyList.splice(index, 1);
+					}
 				}
 			}
-		}
-		let profiles = {};
-		console.log(getPubkeyList[0] !== undefined);
-		if (getPubkeyList.length > 0 && getPubkeyList[0] !== undefined) {
-			profiles = await getProfile(getPubkeyList, RelaysforSeach); //key=pubkey,value=profile
-		}
-		localProfile = { ...localProfile, ...profiles };
+			let profiles = {};
+			console.log(getPubkeyList[0] !== undefined);
+			if (getPubkeyList.length > 0 && getPubkeyList[0] !== undefined) {
+				profiles = await getProfile(getPubkeyList, RelaysforSeach); //key=pubkey,value=profile
+			}
+			localProfile = { ...localProfile, ...profiles };
 
-		localStorage.setItem('profile', JSON.stringify(localProfile));
-		console.log(localProfile);
-		////localStrageに保存
-		//--------------------------------------------------------
-		//形を整えて表示用のリストを作る
-		//タグごとの表示させるオブジェクトたちをどの情報を使って作る？
+			localStorage.setItem('profile', JSON.stringify(localProfile));
+			console.log(localProfile);
+			////localStrageに保存
+			//--------------------------------------------------------
+			//形を整えて表示用のリストを作る
+			//タグごとの表示させるオブジェクトたちをどの情報を使って作る？
 
-		//viewItem
-		const test  = await makeViewItem(fBookmark, noteList, localProfile);
-		console.log(test);
-		viewItem=test;
-		console.log(viewItem[tabSet]);
-		//	} catch {
-		////		const errorMessage = 'naddr decode error';
-		//		console.log(errorMessage);
-		//		return;
-		//	}
+			//viewItem
+			viewItem = await makeViewItem(fBookmark, noteList, localProfile);
+			//console.log(test);
+			//viewItem = test;
+			console.log(viewItem[tabSet]);
+		} catch {
+			const errorMessage = 'naddr decode error';
+			console.log(errorMessage);
+			return;
+		}
 	});
 
 	/**
@@ -132,12 +133,12 @@
 	 * @param {{[key:string] : import('nostr-tools').Event}}localProfile
 	 */
 	async function makeViewItem(fBookmark, noteList, localProfile) {
-		let _viewItem ={};
-let num=0;
+		let _viewItem = {};
+		let num = 0;
 		//fBookmarkはタグごとのIDリスト
-	 	for (const key in fBookmark ) {
-			
-			 _viewItem[key] =await  fBookmark[key].map((id) => {
+		for (const key in fBookmark) {
+			console.log(key);
+			_viewItem[key] = await fBookmark[key].map((id) => {
 				const item = {
 					id: id,
 					noteId: nip19.noteEncode(id),
@@ -172,31 +173,47 @@ let num=0;
 		console.log(_viewItem);
 		return _viewItem;
 	}
+
 	/**
-	 * @type {string}
+	 * @type {number}
 	 */
-	let nowViewID;
-	/**
-	 * @param {string} _id
+	let nowViewIndex;
+	
+
+	 /**
+	 * @param {{ id?: string; noteId?: string; isMenuOpen: any; date?: string; name?: string; icon?: string; display_name?: string; content?: string; }} note
 	 */
-	function onClickMenu(_id) {
-		// @ts-ignore
+	 function onClickMenu(note) {
+		console.log(note);
+		//if (tabSet == '') return;
+		note.isMenuOpen=true;
+		viewItem[tabSet][viewItem[tabSet].indexOf(note)].isMenuOpen=true;
+		console.log(viewItem[tabSet]);
+		nowViewIndex=viewItem[tabSet].indexOf(note);
+		// // @ts-ignore
+		// viewItem[tabSet][_id].isMenuOpen = !viewItem[tabSet][_id].isMenuOpen;
+		// if (viewItem[tabSet][_id].isMenuOpen) {
+		// 	nowViewIndex = _id;
+		// }
+		//console.log(viewItem[tabSet]);
 	}
 
 	/**
 	 * @param {CustomEvent} item
 	 */
 	async function handleItemClick(item) {
-		console.log(item.detail.name, nowViewID);
+		console.log(item.detail.name, nowViewIndex);
+		if (tabSet == '' || viewItem == undefined) return;
 		switch (item.detail.name) {
 			case 'copy':
-				navigator.clipboard.writeText(viewItem[idList.indexOf(nowViewID)].id).then(
+				navigator.clipboard.writeText(viewItem[tabSet][nowViewIndex].noteId).then(
 					() => {
 						// コピーに成功したときの処理
-						console.log(`copyed: ${viewItem[idList.indexOf(nowViewID)].id.slice(0, 15)}...`);
+						console.log(`copyed: ${viewItem[tabSet][nowViewIndex].id.slice(0, 15)}...`);
+
 						/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 						const t = {
-							message: `copyed: ${viewItem[idList.indexOf(nowViewID)].id.slice(0, 15)}...`,
+							message: `copyed: ${viewItem[tabSet][nowViewIndex].id.slice(0, 15)}...`,
 							timeout: 3000
 						};
 						toastStore.trigger(t);
@@ -213,15 +230,15 @@ let num=0;
 					}
 				);
 				break;
-			case 'open':
-				window.open('https://nostx.shino3.net/' + viewItem[idList.indexOf(nowViewID)].id, '_blank');
-				break;
-			case 'delete':
-				/**@type {number}*/
 
+			case 'open':
+				window.open('https://nostx.shino3.net/' + viewItem[tabSet][nowViewIndex].noteId, '_blank');
+				break;
+
+			case 'delete':
 				/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 				const t = await {
-					message: `delete note (${viewItem[idList.indexOf(nowViewID)].id.slice(0, 10)}...)`,
+					message: `delete note (${viewItem[tabSet][nowViewIndex].id.slice(0, 10)}...)`,
 					action: {
 						label: 'DELETE',
 						response: () => deleteNote()
@@ -233,8 +250,9 @@ let num=0;
 				};
 				toastStore.trigger(t);
 				break;
-			default:
-				viewItem[idList.indexOf(nowViewID)].isMenuOpen = false;
+
+				case 'close':
+				viewItem[tabSet][nowViewIndex].isMenuOpen = false;
 				break;
 		}
 	}
@@ -251,7 +269,7 @@ let num=0;
 	function openDialog() {
 		dialogMessage = '';
 		dialog.showModal();
-		dialog.addEventListener('click', function (event) {
+		dialog.addEventListener('click', function (/** @type {{ target: any; }} */ event) {
 			if (event.target === dialog) {
 				//nowLoading=false;
 				dialog.close();
@@ -269,9 +287,11 @@ let num=0;
 	 */
 	let nowLoading;
 	let dialogMessage = '';
-	async function addNote(item) {}
+	/**
+	 * @param {any} _item
+	 */
+	async function addNote(_item) {}
 
-	let nowIndex=0;
 	//$:index=viewItem.indexOf(tabSet);
 </script>
 
@@ -291,59 +311,58 @@ let num=0;
 {#await getBookmarks}
 	<ProgressRadial ... stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
 {:then book}
-	{#if tagList != null && tagList.length > 0}
-		<TabGroup>
-			{#each tagList as bookmark}
-				<Tab bind:group={tabSet} name={bookmark} value={bookmark}>{bookmark}</Tab>
-			{/each}
-			<!-- Tab Panels --->
+	<TabGroup>
+		{#each tagList as tag}
+			<Tab bind:group={tabSet} name={tag} value={tag}>{tag}</Tab>
+		{/each}
+		<!-- Tab Panels --->
 
-			<svelte:fragment slot="panel">
-				{#if viewItem != undefined && Object.keys(viewItem).length > 0}
-					{#each viewItem[tabSet] as note, index}
-						<div class="note">
-							<AppShell>
-								<svelte:fragment slot="sidebarLeft">
-									<div class="icon-area">
-										<img class="icon" src={note.icon} alt="icon" />
+		<svelte:fragment slot="panel">
+			{#if viewItem != undefined && Object.keys(viewItem).length > 0}
+				{#each viewItem[tabSet] as note, ind}
+					<div class="note">
+						<AppShell>
+							<svelte:fragment slot="sidebarLeft">
+								<div class="icon-area">
+									<img class="icon" src={note.icon} alt="icon" />
+								</div>
+							</svelte:fragment>
+
+							<svelte:fragment slot="pageHeader">
+								<div class="header">
+									<div class="display_name">
+										{note.display_name}
 									</div>
-								</svelte:fragment>
+									<div class="name">@{note.name}</div>
+									<div class="date">{note.date}</div>
+								</div>
+							</svelte:fragment>
 
-								<svelte:fragment slot="pageHeader">
-									<div class="header">
-										<div class="display_name">
-											{note.display_name}
-										</div>
-										<div class="name">@{note.name}</div>
-										<div class="date">{note.date}</div>
-									</div>
-								</svelte:fragment>
+							<svelte:fragment slot="sidebarRight">
+								<button
+									on:click={onClickMenu(note)}
+									class="btn1 btn-icon btn-icon-sm variant-filled-primary"
+									style="position:relative">{note.isMenuOpen}▼</button
+								>
 
-								<svelte:fragment slot="sidebarRight">
-									<button
-										class="btn1 btn-icon btn-icon-sm variant-filled-primary"
-										on:click={onClickMenu(note.id)}
-										style="position:relative">▼</button
-									>
+								{#if note.isMenuOpen}
+								
+									<PopupMenu on:item-click={handleItemClick} />
+								{/if}
+							</svelte:fragment>
 
-									{#if note.isMenuOpen}
-										<PopupMenu on:item-click={handleItemClick} />
-									{/if}
-								</svelte:fragment>
+							<!-- Router Slot -->
+							<slot>
+								{note.content}
+							</slot>
 
-								<!-- Router Slot -->
-								<slot>
-									{note.content}
-								</slot>
-
-								<!-- ---- / ---- -->
-							</AppShell>
-						</div>
-					{/each}
-				{/if}
-			</svelte:fragment>
-		</TabGroup>
-	{/if}
+							<!-- ---- / ---- -->
+						</AppShell>
+					</div>
+				{/each}
+			{/if}
+		</svelte:fragment>
+	</TabGroup>
 {/await}
 
 <div class="footer-menu">
