@@ -9,9 +9,12 @@
 		getBookmarks,
 		getEvent,
 		getProfile,
+		noteToHex,
+		postEvent,
 		removeEvent
 	} from '../../lib/functions';
 	import {
+		AppBar,
 		AppShell,
 		ListBox,
 		ListBoxItem,
@@ -23,7 +26,8 @@
 		toastStore
 	} from '@skeletonlabs/skeleton';
 
-	import PopupMenu from './PopupMenu.svelte';
+	import PopupMenu from '../PopupMenu.svelte';
+	import AddNoteDialog from '../AddNoteDialog.svelte';
 
 	let pubkey = '';
 	let relay = '';
@@ -78,8 +82,18 @@
 			bookmarks = await getBookmarks(pubkey, relay);
 			console.log(bookmarks);
 			tabSet = bookmarks[0].tags[0][1];
-
-			await collectEvents();
+			nowTag = 0;
+			bookmarkList = formatBookmark(bookmarks);
+			console.log(bookmarkList);
+			/**
+			 * @type {string[]}
+			 */
+			idList = [];
+			for (const key in bookmarkList) {
+				idList = [...idList, ...bookmarkList[key]];
+			}
+			console.log(idList);
+			eventList = await collectEvents(idList);
 			try {
 				viewItem = arrangeEvents(idList);
 			} catch (error) {
@@ -91,21 +105,13 @@
 		}
 	});
 
-	async function collectEvents() {
-		bookmarkList = formatBookmark(bookmarks);
-		console.log(bookmarkList);
-		/**
-		 * @type {string[]}
-		 */
-		idList = [];
-		for (const key in bookmarkList) {
-			idList = [...idList, ...bookmarkList[key]];
-		}
-		console.log(idList);
-
+	/**
+	 * @param {string[] } idList
+	 */
+	async function collectEvents(idList) {
 		//localStrageちぇっく-------------------------------------
 
-		eventList = await getEvent(idList, RelaysforSeach);
+		const eventList = await getEvent(idList, RelaysforSeach);
 		console.log(eventList);
 		const pubkeyList = await formatPubkeyList(eventList);
 		console.log(pubkeyList);
@@ -134,7 +140,7 @@
 
 		localStorage.setItem('profile', JSON.stringify(localProfile));
 		console.log(localProfile);
-
+		return eventList;
 		//ととのえる
 	}
 	//イベントIDごとに情報をまとめる
@@ -209,10 +215,10 @@
 				navigator.clipboard.writeText(viewItem[idList.indexOf(nowViewID)].id).then(
 					() => {
 						// コピーに成功したときの処理
-						console.log('copyed: ' + viewItem[idList.indexOf(nowViewID)].id);
+						console.log(`copyed: ${viewItem[idList.indexOf(nowViewID)].id.slice(0, 15)}...`);
 						/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 						const t = {
-							message: 'copyed: ' + viewItem[idList.indexOf(nowViewID)].id,
+							message: `copyed: ${viewItem[idList.indexOf(nowViewID)].id.slice(0, 15)}...`,
 							timeout: 3000
 						};
 						toastStore.trigger(t);
@@ -234,23 +240,15 @@
 				break;
 			case 'delete':
 				/**@type {number}*/
-				let nowIndex;
 
-				//-----------------------------------------------ここびみょう
-				//bookmark[]のどれが今のタグかわからへん
-				for (let i = 0; i < bookmarks.length; i++) {
-					if (bookmarks[i].tags[0][1] == tabSet) {
-						nowIndex = i;
-					}
-				}
 				/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 				const t = await {
-					message: `delete note (${viewItem[idList.indexOf(nowViewID)].id.slice(0,10)}...)`,
+					message: `delete note (${viewItem[idList.indexOf(nowViewID)].id.slice(0, 10)}...)`,
 					action: {
 						label: 'DELETE',
-						response: () => deleteNote(nowIndex)
+						response: () => deleteNote(nowTag)
 					},
-					timeout: 10000,
+					timeout: 10000
 
 					//background:
 					//	'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white width-filled'
@@ -262,36 +260,101 @@
 				break;
 		}
 	}
+
 	/**
-	 * @param {number} nowIndex
+	 * @type {number}
 	 */
-	async function deleteNote(nowIndex) {
+	let nowTag;
+	$: for (let i = 0; i < bookmarks.length; i++) {
+		if (bookmarks[i].tags[0][1] == tabSet) {
+			nowTag = i;
+		}
+	}
+
+	//$:console.log(nowTag);
+	/**
+	 * @param {number} nowTag
+	 */
+	async function deleteNote(nowTag) {
 		console.log(nowViewID);
-		const event = await removeEvent(nowViewID, bookmarks[nowIndex], [relay]);
+		const event = await removeEvent(nowViewID, bookmarks[nowTag], [relay]);
 		console.log(event);
 		if (event != null) {
-			bookmarks[nowIndex] = event;
-			await collectEvents();
-			try {
-				viewItem = arrangeEvents(idList);
-			} catch (error) {
-				console.log(error);
-				/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
-			const t = {
-							message: `${error}`,
-							timeout: 3000
-						};
-						toastStore.trigger(t);
-			}
+			bookmarks[nowTag] = event;
+			bookmarkList = formatBookmark(bookmarks);
 		} else {
 			console.log('削除に失敗したかも');
 			/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 			const t = {
-							message: 'failed to delete',
-							timeout: 3000
-						};
-						toastStore.trigger(t);
+				message: 'failed to delete',
+				timeout: 3000
+			};
+			toastStore.trigger(t);
 		}
+	}
+
+	/**
+	 * @type {AddNoteDialog.dialog}
+	 */
+	let dialog;
+
+	function openDialog() {
+		dialogMessage = '';
+		dialog.showModal();
+		dialog.addEventListener('click', function (event) {
+			if (event.target === dialog) {
+				//nowLoading=false;
+				dialog.close();
+			}
+		});
+	}
+
+	function closeDialog() {
+		//nowLoading=false;
+		dialog.close();
+	}
+
+	/**
+	 * @type {boolean}
+	 */
+	let nowLoading;
+	let dialogMessage = '';
+	async function addNote(item) {
+		console.log(item.detail);
+		//追加作業中プログレスアイコン表示しておいて
+
+		let noteID;
+		try {
+			noteID = noteToHex(item.detail);
+		} catch {
+			dialogMessage = 'error: noteIDを確認してください';
+			return;
+		}
+		nowLoading = true;
+		//await add note...
+		const event = await postEvent(noteID, bookmarks[nowTag], [relay]);
+		if (event != null) {
+			idList.push(noteID);
+			const thisEvent = await collectEvents([noteID]);
+			eventList = { ...eventList, ...thisEvent };
+			const thisItem = arrangeEvents([noteID]);
+			// @ts-ignore
+			viewItem.push(thisItem[0]);
+			bookmarks[nowTag] = event;
+			bookmarkList = formatBookmark(bookmarks);
+			nowLoading = false;
+			dialog.close();
+		} else {
+			console.log('追加に失敗したかも');
+			/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+			const t = {
+				message: 'failed to add note',
+				timeout: 3000
+			};
+			toastStore.trigger(t);
+		}
+		//dialog.close();
+		//終わったらアイコン消して
 	}
 </script>
 
@@ -366,6 +429,21 @@
 	</TabGroup>
 {/await}
 
+<div class="footer-menu">
+	<button class="btn variant-filled-secondary footer-btn" on:click={openDialog}>add note</button>
+
+	<button class="btn variant-filled-secondary footer-btn">edit tag</button>
+</div>
+
+<AddNoteDialog
+	bind:dialog
+	on:closeDialog={closeDialog}
+	on:add={addNote}
+	bind:nowLoading
+	bind:dialogMessage
+	bind:tabSet
+/>
+
 <style>
 	.icon-area {
 		margin-right: 1em;
@@ -407,5 +485,15 @@
 	}
 	.btn1 {
 		border-radius: 51em;
+	}
+	.footer-menu {
+		display: block;
+		position: fixed;
+		left: 10px;
+		bottom: 10px;
+		z-index: 100;
+	}
+	.footer-btn {
+		margin: 5px;
 	}
 </style>
