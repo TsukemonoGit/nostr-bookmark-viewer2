@@ -29,6 +29,7 @@
 	import PopupMenu from '../PopupMenu.svelte';
 	import AddNoteDialog from '../AddNoteDialog.svelte';
 	import { each } from 'svelte/internal';
+	import EditTagDialog from '../EditTagDialog.svelte';
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
@@ -58,6 +59,19 @@
 	/** @type {number} */
 	let nowViewIndex;
 	let viewProgress = false;
+
+	//タイアログ表示--------------------AddNota
+	/**@type {AddNoteDialog.dialog}*/
+	let dialog;
+
+	/**@type {boolean}*/
+	let nowLoading;
+	let dialogMessage = '';
+	//タイアログ表示--------------------EditTag
+	/**@type {AddNoteDialog.dialog}*/
+	let editTagDialog;
+
+
 	//コンポーネントが最初に DOM にレンダリングされた後に実行されます(?)
 	onMount(async () => {
 		try {
@@ -268,12 +282,7 @@
 		viewProgress = false;
 	}
 
-	/**
-	 * @type {AddNoteDialog.dialog}
-	 */
-	let dialog;
-
-	function openDialog() {
+	function openAddNoteDialog() {
 		dialogMessage = '';
 		dialog.showModal();
 		dialog.addEventListener('click', function (/** @type {{ target: any; }} */ event) {
@@ -284,16 +293,11 @@
 		});
 	}
 
-	function closeDialog() {
+	function closeAddNoteDialog() {
 		//nowLoading=false;
 		dialog.close();
 	}
 
-	/**
-	 * @type {boolean}
-	 */
-	let nowLoading;
-	let dialogMessage = '';
 	/**
 	 * @param {any} _item
 	 */
@@ -330,11 +334,11 @@
 							thisProf = localProf[key];
 						}
 					}
-					console.log(thisProf);
+					//console.log(thisProf);
 					//ローカルになかったらイベント取りに行く
 				} else if (thisProf == undefined) {
 					const returnProf = await getProfile([thisPubkey], RelaysforSeach);
-					console.log(returnProf);
+					//console.log(returnProf);
 					if (returnProf[thisPubkey] !== '') {
 						thisProf = returnProf[thisPubkey];
 						//プロフ取れたらローカルストレージ更新
@@ -367,7 +371,7 @@
 				(item.date = new Date(thisNote.created_at * 1000).toLocaleString()),
 					(item.pubkey = thisNote.pubkey);
 			}
-			console.log(thisProf);
+			//console.log(thisProf);
 			if (thisProf != '') {
 				const thisProfile = JSON.parse(thisProf.content);
 				item.name = thisProfile.name;
@@ -375,15 +379,38 @@
 				item.icon = thisProfile.picture;
 			}
 			viewItem[tabSet].push(item);
-			viewItem=viewItem;
+			viewItem = viewItem;
 		} catch (error) {
 			//addNoteしっぱいしたらViewItem更新しない
 			console.log(error);
 		}
-		closeDialog() ;
+		closeAddNoteDialog();
 	}
 
+
+	//----------------------------EditNoteDialog
+	function openEditTagDialog() {
+		dialogMessage = '';
+		editTagDialog.showModal();
+		editTagDialog.addEventListener('click', function (/** @type {{ target: any; }} */ event) {
+			if (event.target === editTagDialog) {
+				//nowLoading=false;
+				editTagDialog.close();
+			}
+		});
+	}
+
+
 	//$:index=viewItem.indexOf(tabSet);
+	function closeEditTagDialog(){
+		editTagDialog.close();
+	}
+	function addTag(_item){
+console.log(_item.detail); //inputの中身
+	}
+	function deleteTag(_item){
+		console.log(_item.detail); //inputの中身
+	}
 </script>
 
 <Toast />
@@ -456,9 +483,11 @@
 {/await}
 <div class="space" />
 <div class="footer-menu">
-	<button class="btn variant-filled-secondary footer-btn" on:click={openDialog}>add note</button>
+	<button class="btn variant-filled-secondary footer-btn" on:click={openAddNoteDialog}
+		>add note</button
+	>
 
-	<button class="btn variant-filled-secondary footer-btn">edit tag</button>
+	<button class="btn variant-filled-secondary footer-btn" on:click={openEditTagDialog}>edit tag</button>
 	{#if nowLoading}
 		<div class="progress">
 			<ProgressRadial ... stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
@@ -468,11 +497,21 @@
 
 <AddNoteDialog
 	bind:dialog
-	on:closeDialog={closeDialog}
+	on:closeAddNoteDialog={closeAddNoteDialog}
 	on:add={addNote}
 	bind:nowLoading
 	bind:dialogMessage
 	bind:tabSet
+/>
+<EditTagDialog
+	bind:editTagDialog
+	on:closeEditTagDialog={closeEditTagDialog}
+	on:addTag={addTag}
+	on:deleteTag={deleteTag}
+	bind:nowLoading
+	bind:dialogMessage
+	bind:tabSet
+	bind:tagList
 />
 
 <style>

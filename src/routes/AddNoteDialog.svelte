@@ -9,7 +9,7 @@
     export let tabSet="";
 	const dispatch = createEventDispatcher();
 	function clickClose() {
-		dispatch('closeDialog');
+		dispatch('closeAddNoteDialog');
         
 	}
 	function clickAdd() {
