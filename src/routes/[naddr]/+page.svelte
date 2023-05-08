@@ -35,12 +35,12 @@
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		"wss://relay.nostr.band",
-		"wss://nostr.wine",
-		"wss://universe.nostrich.land",
-		"wss://relay.damus.io",
+		//"wss://relay.nostr.band",
+		//"wss://nostr.wine",
+		//"wss://universe.nostrich.land",
+		//"wss://relay.damus.io",
 		//'wss://nostream.localtest.me',
-		//'ws://localhost:7000'
+		'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
@@ -360,6 +360,12 @@
 			} catch (error) {
 				//note内容取得失敗
 				console.log(error);
+					/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+					const t = {
+							message: `fail to add note id:${_item.detail}`,
+							timeout: 3000
+						};
+						toastStore.trigger(t);
 			}
 			//viewEvent整える
 			let item = {
@@ -392,6 +398,12 @@
 		} catch (error) {
 			//addNoteしっぱいしたらViewItem更新しない
 			console.log(error);
+			/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+			const t = {
+							message: `fail to add note id:${_item.detail}`,
+							timeout: 3000
+						};
+						toastStore.trigger(t);
 		}
 		closeAddNoteDialog();
 	}
