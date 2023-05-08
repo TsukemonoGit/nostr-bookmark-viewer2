@@ -9,6 +9,7 @@
     export let tabSet="";
 	const dispatch = createEventDispatcher();
 	function clickClose() {
+		noteID="";
 		dispatch('closeAddNoteDialog');
         
 	}
@@ -24,7 +25,7 @@
 		<p>
 			<label
 				>noteID:
-				<input type="email" class="input" bind:value={noteID} placeholder="note..." />
+				<input type="text" pattern="^[-0-9a-z0-9]+$" class="input" bind:value={noteID} placeholder="note..." />
 			</label>
 		</p>
         <div class ="flex">

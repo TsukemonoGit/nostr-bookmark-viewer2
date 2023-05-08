@@ -15,6 +15,7 @@
      let deleteTag="";
 	const dispatch = createEventDispatcher();
 	function clickClose() {
+        tagName="";
 		dispatch('closeEditTagDialog');
         
 	}
@@ -34,7 +35,7 @@
 		<p>
 			<label
 				>add new tag :
-				<input type="email" class="input" bind:value={tagName} placeholder="tag name" />
+				<input type="text" pattern="^[-0-9a-z0-9]+$" class="input" bind:value={tagName} placeholder="tag name" />
 			</label>
 		</p>
         {#if tagList.length>0}
