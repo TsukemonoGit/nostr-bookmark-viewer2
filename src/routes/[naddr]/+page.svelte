@@ -41,23 +41,23 @@
 	];
 	/** @type {string}*/
 	let pubkey;
+	/**@type {import('nostr-tools').Event[]} */
 	let event30001; //受信したイベントたち（修正するときに使う）
 	/**@type {string}*/
 	let relay;
 
-	/**
-	 * @type {{[key:string]:{id:string;noteId:string;isMenuOpen:boolean;date:string;name:string;icon:string;display_name:string;content:string}[]} | undefined}
-	 */
+	/**@type {{[key:string]:{id:string;noteId:string;isMenuOpen:boolean;date:string;name:string;icon:string;display_name:string;content:string}[]} | undefined} */
 	let viewItem = {};
-	/**
-	 * @type {string }
-	 */
+
+	/**@type {string }*/
 	let tabSet = '';
-	/**
-	 * @type {string[]}
-	 */
+
+	/**@type {string[]} */
 	let tagList = [];
 
+	/** @type {number} */
+	let nowViewIndex;
+	let viewProgress = false;
 	//コンポーネントが最初に DOM にレンダリングされた後に実行されます(?)
 	onMount(async () => {
 		try {
@@ -175,21 +175,15 @@
 	}
 
 	/**
-	 * @type {number}
-	 */
-	let nowViewIndex;
-	
-
-	 /**
 	 * @param {{ id?: string; noteId?: string; isMenuOpen: any; date?: string; name?: string; icon?: string; display_name?: string; content?: string; }} note
 	 */
-	 function onClickMenu(note) {
+	function onClickMenu(note) {
 		console.log(note);
 		//if (tabSet == '') return;
-		note.isMenuOpen=true;
-		viewItem[tabSet][viewItem[tabSet].indexOf(note)].isMenuOpen=true;
+		note.isMenuOpen = true;
+		viewItem[tabSet][viewItem[tabSet].indexOf(note)].isMenuOpen = true;
 		console.log(viewItem[tabSet]);
-		nowViewIndex=viewItem[tabSet].indexOf(note);
+		nowViewIndex = viewItem[tabSet].indexOf(note);
 		// // @ts-ignore
 		// viewItem[tabSet][_id].isMenuOpen = !viewItem[tabSet][_id].isMenuOpen;
 		// if (viewItem[tabSet][_id].isMenuOpen) {
@@ -209,11 +203,11 @@
 				navigator.clipboard.writeText(viewItem[tabSet][nowViewIndex].noteId).then(
 					() => {
 						// コピーに成功したときの処理
-						console.log(`copyed: ${viewItem[tabSet][nowViewIndex].id.slice(0, 15)}...`);
+						console.log(`copyed: ${viewItem[tabSet][nowViewIndex].noteId.slice(0, 15)}...`);
 
 						/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 						const t = {
-							message: `copyed: ${viewItem[tabSet][nowViewIndex].id.slice(0, 15)}...`,
+							message: `copyed: ${viewItem[tabSet][nowViewIndex].noteId.slice(0, 15)}...`,
 							timeout: 3000
 						};
 						toastStore.trigger(t);
@@ -241,7 +235,7 @@
 					message: `delete note (${viewItem[tabSet][nowViewIndex].id.slice(0, 10)}...)`,
 					action: {
 						label: 'DELETE',
-						response: () => deleteNote()
+						response: () => deleteNote(viewItem[tabSet][nowViewIndex].id)
 					},
 					timeout: 10000
 
@@ -251,7 +245,7 @@
 				toastStore.trigger(t);
 				break;
 
-				case 'close':
+			default:
 				viewItem[tabSet][nowViewIndex].isMenuOpen = false;
 				break;
 		}
@@ -259,8 +253,21 @@
 
 	//$:console.log(nowTag);
 
-	async function deleteNote() {}
-
+	async function deleteNote(hexId) {
+		viewProgress = true;
+		//event30001のリストの中の何番目が目的のイベント化
+		const thisEvent = event30001[tagList.indexOf(tabSet)];
+		const responseEvent = await removeEvent(hexId, thisEvent, [relay]);
+		event30001[tagList.indexOf(tabSet)] = responseEvent;
+		// viewItemから指定した要素を削除
+		if (viewItem && viewItem[tabSet]) {
+			viewItem[tabSet].splice(nowViewIndex, 1);
+		}
+		viewItem=viewItem;
+		console.log(viewItem);
+		viewProgress = false;
+	}
+	$: viewItem = viewItem;
 	/**
 	 * @type {AddNoteDialog.dialog}
 	 */
@@ -342,11 +349,10 @@
 								<button
 									on:click={onClickMenu(note)}
 									class="btn1 btn-icon btn-icon-sm variant-filled-primary"
-									style="position:relative">{note.isMenuOpen}▼</button
+									style="position:relative">▼</button
 								>
 
 								{#if note.isMenuOpen}
-								
 									<PopupMenu on:item-click={handleItemClick} />
 								{/if}
 							</svelte:fragment>
@@ -364,11 +370,16 @@
 		</svelte:fragment>
 	</TabGroup>
 {/await}
-
+<div class="space" />
 <div class="footer-menu">
 	<button class="btn variant-filled-secondary footer-btn" on:click={openDialog}>add note</button>
 
 	<button class="btn variant-filled-secondary footer-btn">edit tag</button>
+	{#if nowLoading}
+		<div class="progress">
+			<ProgressRadial ... stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
+		</div>
+	{/if}
 </div>
 
 <AddNoteDialog
@@ -431,5 +442,8 @@
 	}
 	.footer-btn {
 		margin: 5px;
+	}
+	.space {
+		padding: 2em;
 	}
 </style>
