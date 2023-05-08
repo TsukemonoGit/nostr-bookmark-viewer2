@@ -15,7 +15,7 @@
 	}
 	function clickAdd() {
 		dispatch('add', noteID);
-		noteID = '';
+		noteID="";
 	}
 </script>
 

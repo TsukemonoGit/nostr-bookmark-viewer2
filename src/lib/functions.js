@@ -312,7 +312,7 @@ export async function addNoteEvent(noteID, _event, relays) {
            
         });
     });
-    return event;
+    
 }
 
 /**

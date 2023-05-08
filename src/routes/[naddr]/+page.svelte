@@ -35,17 +35,17 @@
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		"wss://relay.nostr.band",
-		"wss://nostr.wine",
-		"wss://universe.nostrich.land",
-		"wss://relay.damus.io",
+		//"wss://relay.nostr.band",
+		//"wss://nostr.wine",
+		//"wss://universe.nostrich.land",
+		//"wss://relay.damus.io",
 		//'wss://nostream.localtest.me',
-		//'ws://localhost:7000'
+		'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
 	/**@type {import('nostr-tools').Event[]} */
-	let event30001; //受信したイベントたち（修正するときに使う）
+	let event30001=[]; //受信したイベントたち（修正するときに使う）
 	/**@type {string}*/
 	let relay;
 
@@ -113,8 +113,8 @@
 				for (const key in localProfile) {
 					if (pubkeyList.includes(key) && localProfile[key] != '') {
 						const index = getPubkeyList.indexOf(key);
-						if(getPubkeyList.length==1){
-							getPubkeyList=[];
+						if (getPubkeyList.length == 1) {
+							getPubkeyList = [];
 							break;
 						}
 						getPubkeyList.splice(index, 1);
@@ -122,31 +122,29 @@
 				}
 			}
 			let profiles = {};
-			
-			if (getPubkeyList!=null && getPubkeyList.length > 0 && getPubkeyList[0] !== undefined) {
-				
-				profiles = await getProfile(getPubkeyList, RelaysforSeach); //key=pubkey,value=profile
-			
-			localProfile = { ...localProfile, ...profiles };
 
-			localStorage.setItem('profile', JSON.stringify(localProfile));
-			console.log(localProfile);
-		}
+			if (getPubkeyList != null && getPubkeyList.length > 0 && getPubkeyList[0] !== undefined) {
+				profiles = await getProfile(getPubkeyList, RelaysforSeach); //key=pubkey,value=profile
+
+				localProfile = { ...localProfile, ...profiles };
+
+				localStorage.setItem('profile', JSON.stringify(localProfile));
+				console.log(localProfile);
+			}
 			////localStrageに保存
 			//--------------------------------------------------------
 			//形を整えて表示用のリストを作る
 			//タグごとの表示させるオブジェクトたちをどの情報を使って作る？
 			console.log(localProfile);
-			try{
-			//viewItem
-			viewItem = await makeViewItem(fBookmark, noteList, localProfile);
-			console.log(viewItem[tabSet]);
-			}catch(error){
-				console.log("viewItemでエラー");
+			try {
+				//viewItem
+				viewItem = await makeViewItem(fBookmark, noteList, localProfile);
+				console.log(viewItem[tabSet]);
+			} catch (error) {
+				console.log('viewItemでエラー');
 			}
 			//console.log(test);
 			//viewItem = test;
-			
 		} catch {
 			const errorMessage = 'naddr decode error';
 			console.log(errorMessage);
@@ -166,40 +164,40 @@
 		//fBookmarkはタグごとのIDリスト
 		for (const key in fBookmark) {
 			console.log(key);
-			try{
-			_viewItem[key] = await fBookmark[key].map((id) => {
-				const item = {
-					id: id,
-					noteId: nip19.noteEncode(id),
-					content: 'undefined',
-					date: 'unknown',
-					pubkey: 'unknown',
-					name: 'undefined',
-					display_name: 'undefined',
-					icon: 'undefined',
-					isMenuOpen: false //メニューの開閉状態
-				};
-
-				try {
-					const note = noteList[id];
-					item.content = note.content;
-					item.pubkey = nip19.npubEncode(note.pubkey);
-					item.date = new Date(note.created_at * 1000).toLocaleString();
+			try {
+				_viewItem[key] = await fBookmark[key].map((id) => {
+					const item = {
+						id: id,
+						noteId: nip19.noteEncode(id),
+						content: 'undefined',
+						date: 'unknown',
+						pubkey: 'unknown',
+						name: 'undefined',
+						display_name: 'undefined',
+						icon: 'undefined',
+						isMenuOpen: false //メニューの開閉状態
+					};
 
 					try {
-						const prof = JSON.parse(localProfile[note.pubkey].content);
+						const note = noteList[id];
+						item.content = note.content;
+						item.pubkey = nip19.npubEncode(note.pubkey);
+						item.date = new Date(note.created_at * 1000).toLocaleString();
 
-						item.name = prof.name;
-						item.display_name = prof.display_name;
-						item.icon = prof.picture;
+						try {
+							const prof = JSON.parse(localProfile[note.pubkey].content);
+
+							item.name = prof.name;
+							item.display_name = prof.display_name;
+							item.icon = prof.picture;
+						} catch {}
 					} catch {}
-				} catch {}
 
-				return item;
-			});
-		}catch(error){
-			_viewItem[key] =[];
-		}
+					return item;
+				});
+			} catch (error) {
+				_viewItem[key] = [];
+			}
 			num++;
 		}
 		console.log(_viewItem);
@@ -320,108 +318,79 @@
 	 * @param {any} _item
 	 */
 	async function addNote(_item) {
-		console.log(_item.detail); //inputの中身
-		try {
-			const hexId = noteToHex(_item.detail);
-			//event30001のリストの中の何番目が目的のイベント化
-			const thisEvent = event30001[tagList.indexOf(tabSet)];
-			const responseEvent = await addNoteEvent(hexId, thisEvent, [relay]);
-			//event30001のリストを更新
-			console.log(responseEvent);
-			if (responseEvent != null) {
-				event30001[tagList.indexOf(tabSet)] = responseEvent;
-			}
-			//viewItemに追加するためにヤンヤヤンヤする
-			//hexIDからイベント内容を取得
-			/**@type {import('nostr-tools').Event}*/
-			let thisNote = '';
-			let thisProf;
-			let localProf;
-			try {
-				const tmpthisNote = await getEvent([hexId], RelaysforSeach);
-
-				console.log(hexId);
-				console.log(thisNote);
-				thisNote = tmpthisNote[hexId];
-				const thisPubkey = thisNote.pubkey;
-				console.log(thisPubkey);
-				//localに存在するか確認
-				const tmp = localStorage.getItem('profile');
-				if (tmp != null) {
-					localProf = JSON.parse(tmp);
-					console.log(localProf);
-					for (const key in localProf) {
-						//console.log(key);
-						if (key == thisPubkey) {
-							thisProf = localProf[key];
-						}
-					}
-					console.log(thisProf);
-					//ローカルになかったらイベント取りに行く
-				} else if (thisProf == undefined) {
-					const returnProf = await getProfile([thisPubkey], RelaysforSeach);
-					//console.log(returnProf);
-					if (returnProf[thisPubkey] !== '') {
-						thisProf = returnProf[thisPubkey];
-						//プロフ取れたらローカルストレージ更新
-						if (localProf != null) {
-							const saveProf = [...localProf, returnProf];
-							localStorage.setItem('profile', JSON.stringify(saveProf));
-						} else {
-							localStorage.setItem('profile', JSON.stringify(returnProf));
-						}
-					}
-				}
-
-				
-			} catch (error) {
-				//note内容取得失敗
-				console.log(error);
-					/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
-					const t = {
-							message: `fail to add note id:${_item.detail}`,
-							timeout: 3000
-						};
-						toastStore.trigger(t);
-			}
-			//viewEvent整える
-			let item = {
-				id: hexId,
-				noteId: nip19.noteEncode(hexId),
-				content: 'unknown',
-				date: 'unknown',
-				pubkey: 'unknown',
-				name: 'undefined',
-				display_name: 'undefined',
-				icon: 'undefined',
-				isMenuOpen: false //メニューの開閉状態
-			};
-			if (thisNote != undefined || thisNote != '') {
-				item.content = thisNote.content;
-				(item.date = new Date(thisNote.created_at * 1000).toLocaleString()),
-					(item.pubkey = thisNote.pubkey);
-			}
-
-			//console.log(thisProf);
-			if (thisProf != '') {
-				const thisProfile = JSON.parse(thisProf.content);
-				console.log(thisProfile);
-				item.name = thisProfile.name;
-				item.display_name = thisProfile.display_name;
-				item.icon = thisProfile.picture;
-			}
-			viewItem[tabSet].push(item);
-			viewItem = viewItem;
-		} catch (error) {
-			//addNoteしっぱいしたらViewItem更新しない
-			console.log(error);
-			/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+		const hexId = noteToHex(_item.detail);
+		const thisEvent = event30001[tagList.indexOf(tabSet)];
+		console.log(thisEvent);
+		const responseEvent = await addNoteEvent(hexId, thisEvent, [relay]);
+		console.log(responseEvent);
+		if (responseEvent == null) {
 			const t = {
-							message: `fail to add note id:${_item.detail}`,
-							timeout: 3000
-						};
-						toastStore.trigger(t);
+				message: `fail to add note id:${_item.detail}`,
+				timeout: 3000
+			};
+			toastStore.trigger(t);
+			closeAddNoteDialog();
+			return;
 		}
+
+		event30001[tagList.indexOf(tabSet)] = responseEvent;
+
+		let thisNote, thisProf;
+		try {
+			const tmpthisNote = await getEvent([hexId], RelaysforSeach);
+			console.log(tmpthisNote);
+			thisNote = tmpthisNote[hexId];
+			const thisPubkey = thisNote.pubkey;
+
+			let localProf = JSON.parse(localStorage.getItem('profile') || '{}');
+			if (localProf[thisPubkey] == null) {
+				const returnProf = await getProfile([thisPubkey], RelaysforSeach);
+				if (returnProf[thisPubkey] !== '') {
+					thisProf = returnProf[thisPubkey];
+					localProf = { ...localProf, ...returnProf };
+					localStorage.setItem('profile', JSON.stringify(localProf));
+				}
+			} else {
+				thisProf = localProf[thisPubkey];
+			}
+		} catch (error) {
+			console.log(error);
+			const t = {
+				message: `fail to add note id:${_item.detail}`,
+				timeout: 3000
+			};
+			toastStore.trigger(t);
+			closeAddNoteDialog();
+			return;
+		}
+
+		let item = {
+			id: hexId,
+			noteId: nip19.noteEncode(hexId),
+			content: 'unknown',
+			date: 'unknown',
+			pubkey: 'unknown',
+			name: 'undefined',
+			display_name: 'undefined',
+			icon: 'undefined',
+			isMenuOpen: false //メニューの開閉状態
+		};
+		if (thisNote && thisNote.content !== undefined && thisNote.content.trim() !== '') {
+			item.content = thisNote.content;
+			item.date = new Date(thisNote.created_at * 1000).toLocaleString();
+			item.pubkey = thisNote.pubkey;
+		}
+
+		if (thisProf && thisProf.content !== undefined && thisProf.content.trim() !== '') {
+			const thisProfile = JSON.parse(thisProf.content);
+			item.name = thisProfile.name;
+			item.display_name = thisProfile.display_name;
+			item.icon = thisProfile.picture;
+		}
+
+		viewItem[tabSet].push(item);
+		viewItem = viewItem;
+
 		closeAddNoteDialog();
 	}
 
@@ -668,9 +637,9 @@
 		bottom: 10px;
 		z-index: 100;
 	}
-	.progress{
+	.progress {
 		margin-left: auto;
-		display:inline-flex;
+		display: inline-flex;
 	}
 	.footer-btn {
 		margin: 5px;
