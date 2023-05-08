@@ -133,7 +133,8 @@
 <div class="main">
 	<p class="hazimeni">
 		ブックマークを取得する公開鍵とリレーを設定してください<br />
-		ブラウザ拡張のpreferred relaysにリレーを登録しておくとリレーURLの入力が楽になります。
+		ブラウザ拡張のpreferred relaysにリレーを登録しておくとリレーURLの入力が楽になります。<br />
+		なんもわからん人間が作ってるのでご利用は自己責任でお願いします。
 	</p>
 	<button type="button" id="btn1" class="btn variant-filled-primary" on:click={onClickNip07}
 		>Use NIP-07 Browser Extension</button
