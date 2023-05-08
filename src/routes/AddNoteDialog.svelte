@@ -24,7 +24,7 @@
 		<p>
 			<label
 				>noteID:
-				<input type="email" class="input" bind:value={noteID} placeholder="npub..." />
+				<input type="email" class="input" bind:value={noteID} placeholder="note..." />
 			</label>
 		</p>
         <div class ="flex">
