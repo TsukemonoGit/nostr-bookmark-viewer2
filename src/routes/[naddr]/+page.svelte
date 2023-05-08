@@ -535,7 +535,7 @@
 							<svelte:fragment slot="sidebarRight">
 								<button
 									on:click={onClickMenu(note)}
-									class="btn1 btn-icon btn-icon-sm variant-filled-primary"
+									class="btn-icon btn-icon-sm variant-filled-primary rounded-full"
 									style="position:relative">▼</button
 								>
 
@@ -546,7 +546,7 @@
 
 							<!-- Router Slot -->
 							<slot>
-								{note.content}
+								<div class="content">{note.content}</div>
 							</slot>
 
 							<!-- ---- / ---- -->
@@ -559,11 +559,11 @@
 {/await}
 <div class="space" />
 <div class="footer-menu">
-	<button class="btn variant-filled-secondary footer-btn" on:click={openAddNoteDialog}
+	<button class="btn variant-filled-secondary footer-btn rounded-full" on:click={openAddNoteDialog}
 		>add note</button
 	>
 
-	<button class="btn variant-filled-secondary footer-btn" on:click={openEditTagDialog}
+	<button class="btn variant-filled-secondary footer-btn rounded-full" on:click={openEditTagDialog}
 		>edit tag</button
 	>
 	{#if nowLoading}
@@ -630,9 +630,7 @@
 		display: flex;
 		width: 100%;
 	}
-	.btn1 {
-		border-radius: 51em;
-	}
+	
 	.footer-menu {
 		display: block;
 		position: fixed;
@@ -645,5 +643,8 @@
 	}
 	.space {
 		padding: 2em;
+	}
+	.content{
+		white-space: pre-wrap;
 	}
 </style>

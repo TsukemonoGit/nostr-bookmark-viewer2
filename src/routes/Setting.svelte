@@ -156,7 +156,7 @@
 		{/if}
 	</div>
 
-	<button type="button" id="btn1" class="btn variant-filled-secondary" on:click={onClickNext}
+	<button type="button" id="btn1" class="btn variant-filled-secondary rounded-full" on:click={onClickNext}
 		>Next →</button
 	>
 

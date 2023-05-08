@@ -28,8 +28,8 @@
 			</label>
 		</p>
         <div class ="flex">
-		<button on:click={clickAdd} class="btn variant-filled-primary"> add note</button>
-		<button on:click={clickClose} class="btn variant-filled-secondary"> close </button>
+		<button on:click={clickAdd} class="btn variant-filled-primary rounded-full"> add note</button>
+		<button on:click={clickClose} class="btn variant-filled-secondary rounded-full"> close </button>
 		{#if nowLoading}
             <div class="progress">
 				<ProgressRadial ... width="w-10" stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
@@ -58,4 +58,5 @@
     .message{
         color:red;
     }
+	.btn{margin:0.5em;}
 </style>

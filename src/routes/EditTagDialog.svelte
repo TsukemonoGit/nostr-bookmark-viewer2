@@ -48,9 +48,9 @@
         </select>
         {/if}
         <div class ="flex">
-		<button on:click={clickAdd} class="btn1 btn variant-filled-success">add tag</button>
-        <button on:click={clickDelete} class="btn1 btn variant-filled-warning">delete tag</button>
-		<button on:click={clickClose} class="btn1 btn variant-filled-secondary">close</button>
+		<button on:click={clickAdd} class="btn1 btn variant-filled-success rounded-full">add tag</button>
+        <button on:click={clickDelete} class="btn1 btn variant-filled-warning rounded-full">delete tag</button>
+		<button on:click={clickClose} class="btn1 btn variant-filled-secondary rounded-full">close</button>
 		{#if nowLoading}
             <div class="progress">
 				<ProgressRadial ... width="w-10" stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
