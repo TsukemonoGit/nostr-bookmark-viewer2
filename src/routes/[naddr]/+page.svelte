@@ -35,12 +35,12 @@
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		//"wss://relay.nostr.band",
-		//"wss://nostr.wine",
-		//"wss://universe.nostrich.land",
-		//"wss://relay.damus.io",
-		'wss://nostream.localtest.me',
-		'ws://localhost:7000'
+		"wss://relay.nostr.band",
+		"wss://nostr.wine",
+		"wss://universe.nostrich.land",
+		"wss://relay.damus.io",
+		//'wss://nostream.localtest.me',
+		//'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
@@ -489,6 +489,7 @@
 	}
 </script>
 
+<div style="color:coral">ご利用は自己責任でお願いします</div>
 <Toast />
 <div>
 	<ul class="list-dl">
