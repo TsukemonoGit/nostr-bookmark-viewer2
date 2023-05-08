@@ -7,7 +7,7 @@
 	export let nowLoading = false;
 	let tagName = '';
     export let dialogMessage="";
-    export let tabSet="";
+
     /**
 	 * @type {string[]}
 	 */
@@ -30,7 +30,7 @@
 
 <dialog bind:this={editTagDialog}>
 	<div class="inner">
-		<h3>edit tag (tag:{tabSet})</h3>
+		<h3>edit tag</h3>
 		<p>
 			<label
 				>add new tag :

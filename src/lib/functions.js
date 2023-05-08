@@ -312,6 +312,7 @@ export async function addNoteEvent(noteID, _event, relays) {
            
         });
     });
+    return event;
 }
 
 /**
@@ -433,7 +434,7 @@ export async function createNewTag(tagName, pubkey, relays) {
         );
     });
 
-    return;
+    return event;
 }
 
 
@@ -442,30 +443,28 @@ export async function createNewTag(tagName, pubkey, relays) {
  * @param {string} pubkey
  * @param {any} relays
  */
-export async function DereteTag(eventID, pubkey, relays) {
-    // @ts-ignore
+export async function DereteTag(eventID, pubkey, relays){
     const event = await window.nostr.signEvent({
-        content: "",
-        kind: 5,
-        pubkey: pubkey,
-        created_at: Math.floor(Date.now() / 1000),
-        tags: [['e', eventID]],
+      content: "",
+      kind: 5,
+      pubkey: pubkey,
+      created_at: Math.floor(Date.now() / 1000),
+      tags: [['e', eventID]],
     });
     event.id = getEventHash(event);
     const pool = new SimplePool();
-    let pub = pool.publish(relays, event);
-    pub.on("ok", () => {
+    return new Promise((resolve, reject) => {
+      const pub = pool.publish(relays, event);
+      pub.on("ok", () => {
         console.log(`${relays.url} has accepted our event`);
+        resolve(true);
+      });
+      pub.on("failed", (reason) => {
+        console.log(`failed to publish to: ${reason}`);
+        resolve(false);
+      });
     });
-    // @ts-ignore
-    pub.on("failed", (reason) => {
-        console.log(
-            `failed to publish to: ${reason}`
-        );
-    });
-
-    return;
-}
+  }
 
 /**
  * @param {{[key:string]: import("nostr-tools").Event}} eventList

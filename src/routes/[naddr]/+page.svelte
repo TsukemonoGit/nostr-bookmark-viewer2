@@ -11,7 +11,9 @@
 		getProfile,
 		noteToHex,
 		addNoteEvent,
-		removeEvent
+		removeEvent,
+		createNewTag,
+		DereteTag
 	} from '../../lib/functions';
 	import {
 		AppBar,
@@ -70,7 +72,6 @@
 	//タイアログ表示--------------------EditTag
 	/**@type {AddNoteDialog.dialog}*/
 	let editTagDialog;
-
 
 	//コンポーネントが最初に DOM にレンダリングされた後に実行されます(?)
 	onMount(async () => {
@@ -308,7 +309,11 @@
 			//event30001のリストの中の何番目が目的のイベント化
 			const thisEvent = event30001[tagList.indexOf(tabSet)];
 			const responseEvent = await addNoteEvent(hexId, thisEvent, [relay]);
-
+			//event30001のリストを更新
+			console.log(responseEvent);
+			if(responseEvent!=null){
+				event30001[tagList.indexOf(tabSet)]=responseEvent;
+			}
 			//viewItemに追加するためにヤンヤヤンヤする
 			//hexIDからイベント内容を取得
 			/**@type {import('nostr-tools').Event}*/
@@ -327,14 +332,14 @@
 				const tmp = localStorage.getItem('profile');
 				if (tmp != null) {
 					localProf = JSON.parse(tmp);
-
+					console.log(localProf);
 					for (const key in localProf) {
 						//console.log(key);
 						if (key == thisPubkey) {
 							thisProf = localProf[key];
 						}
 					}
-					//console.log(thisProf);
+					console.log(thisProf);
 					//ローカルになかったらイベント取りに行く
 				} else if (thisProf == undefined) {
 					const returnProf = await getProfile([thisPubkey], RelaysforSeach);
@@ -371,9 +376,11 @@
 				(item.date = new Date(thisNote.created_at * 1000).toLocaleString()),
 					(item.pubkey = thisNote.pubkey);
 			}
+
 			//console.log(thisProf);
 			if (thisProf != '') {
 				const thisProfile = JSON.parse(thisProf.content);
+				console.log(thisProfile);
 				item.name = thisProfile.name;
 				item.display_name = thisProfile.display_name;
 				item.icon = thisProfile.picture;
@@ -387,7 +394,6 @@
 		closeAddNoteDialog();
 	}
 
-
 	//----------------------------EditNoteDialog
 	function openEditTagDialog() {
 		dialogMessage = '';
@@ -400,17 +406,87 @@
 		});
 	}
 
-
 	//$:index=viewItem.indexOf(tabSet);
-	function closeEditTagDialog(){
+	function closeEditTagDialog() {
+		dialogMessage = '';
 		editTagDialog.close();
 	}
-	function addTag(_item){
-console.log(_item.detail); //inputの中身
-	}
-	function deleteTag(_item){
+
+	async function addTag(_item) {
+		dialogMessage = '';
 		console.log(_item.detail); //inputの中身
+		const newTag = _item.detail; //これをついかします
+		//tag名がかぶってないか確認する
+		if (tagList.includes(newTag)) {
+			dialogMessage = `${newTag}タグすでにあるっぽい`;
+			return;
+		}
+		try {
+			const thisEvent = await createNewTag(newTag, pubkey, [relay]);
+			//追加したものをEvent30001に追加します
+			
+				event30001.push(thisEvent);
+				console.log(event30001);
+				//tagListにも追加します
+				tagList.push(newTag);
+				tagList = tagList;
+				//viewItemに空箱を追加します
+				viewItem[newTag] = [];
+			
+		} catch (error) {
+			console.log(error);
+		}
+		editTagDialog.close();
 	}
+
+	async function deleteTag(_item) {
+		dialogMessage = '';
+		console.log(_item.detail); //inputの中身
+
+		const dTag = _item.detail;
+		if (dTag == '') {
+			dialogMessage = '削除したいタグを選択してください';
+			return;
+		}
+		editTagDialog.close();
+		//dTagからどのイベントを削除するのかを探す
+		const index = tagList.indexOf(dTag);
+		const thisEvent = event30001[index];
+		console.log(event30001);
+		console.log(thisEvent);
+
+		/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+		const t = await {
+			message: `delete tag (${thisEvent.tags[0][1]})`,
+			action: {
+				label: 'DELETE',
+				response: () => deleteTagEvent(thisEvent)
+			},
+			timeout: 10000
+			//background:
+			//	'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white width-filled'
+		};
+		toastStore.trigger(t);
+	}
+
+	
+	/**
+	 * @param {import("nostr-tools").Event} deleteEvent
+	 */
+	async function deleteTagEvent(deleteEvent) {
+  const isSuccess = await DereteTag(deleteEvent.id, pubkey, [relay]);
+  console.log(isSuccess);
+  if (isSuccess) {
+    //成功したらViewItemからけして　タブリストからも消す
+    const thisTab = deleteEvent.tags[0][1];
+	console.log(viewItem[thisTab]);
+    delete viewItem[thisTab];
+    tagList = tagList.filter(tag => tag !== thisTab);
+    tabSet = tagList[0];
+  } else {
+    console.log('削除失敗したかも');
+  }
+}
 </script>
 
 <Toast />
@@ -487,7 +563,9 @@ console.log(_item.detail); //inputの中身
 		>add note</button
 	>
 
-	<button class="btn variant-filled-secondary footer-btn" on:click={openEditTagDialog}>edit tag</button>
+	<button class="btn variant-filled-secondary footer-btn" on:click={openEditTagDialog}
+		>edit tag</button
+	>
 	{#if nowLoading}
 		<div class="progress">
 			<ProgressRadial ... stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
@@ -510,7 +588,6 @@ console.log(_item.detail); //inputの中身
 	on:deleteTag={deleteTag}
 	bind:nowLoading
 	bind:dialogMessage
-	bind:tabSet
 	bind:tagList
 />
 
