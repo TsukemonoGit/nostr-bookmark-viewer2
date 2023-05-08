@@ -35,12 +35,12 @@
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		"wss://relay.nostr.band",
-		"wss://nostr.wine",
-		"wss://universe.nostrich.land",
-		"wss://relay.damus.io",
+		//"wss://relay.nostr.band",
+		//"wss://nostr.wine",
+		//"wss://universe.nostrich.land",
+		//"wss://relay.damus.io",
 		//'wss://nostream.localtest.me',
-		//'ws://localhost:7000'
+		'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
@@ -113,29 +113,40 @@
 				for (const key in localProfile) {
 					if (pubkeyList.includes(key) && localProfile[key] != '') {
 						const index = getPubkeyList.indexOf(key);
+						if(getPubkeyList.length==1){
+							getPubkeyList=[];
+							break;
+						}
 						getPubkeyList.splice(index, 1);
 					}
 				}
 			}
 			let profiles = {};
-			console.log(getPubkeyList[0] !== undefined);
-			if (getPubkeyList.length > 0 && getPubkeyList[0] !== undefined) {
+			
+			if (getPubkeyList!=null && getPubkeyList.length > 0 && getPubkeyList[0] !== undefined) {
+				
 				profiles = await getProfile(getPubkeyList, RelaysforSeach); //key=pubkey,value=profile
-			}
+			
 			localProfile = { ...localProfile, ...profiles };
 
 			localStorage.setItem('profile', JSON.stringify(localProfile));
 			console.log(localProfile);
+		}
 			////localStrageに保存
 			//--------------------------------------------------------
 			//形を整えて表示用のリストを作る
 			//タグごとの表示させるオブジェクトたちをどの情報を使って作る？
-
+			console.log(localProfile);
+			try{
 			//viewItem
 			viewItem = await makeViewItem(fBookmark, noteList, localProfile);
+			console.log(viewItem[tabSet]);
+			}catch(error){
+				console.log("viewItemでエラー");
+			}
 			//console.log(test);
 			//viewItem = test;
-			console.log(viewItem[tabSet]);
+			
 		} catch {
 			const errorMessage = 'naddr decode error';
 			console.log(errorMessage);
@@ -155,6 +166,7 @@
 		//fBookmarkはタグごとのIDリスト
 		for (const key in fBookmark) {
 			console.log(key);
+			try{
 			_viewItem[key] = await fBookmark[key].map((id) => {
 				const item = {
 					id: id,
@@ -185,6 +197,9 @@
 
 				return item;
 			});
+		}catch(error){
+			_viewItem[key] =[];
+		}
 			num++;
 		}
 		console.log(_viewItem);
@@ -357,6 +372,8 @@
 						}
 					}
 				}
+
+				
 			} catch (error) {
 				//note内容取得失敗
 				console.log(error);
