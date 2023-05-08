@@ -367,10 +367,12 @@
 				(item.date = new Date(thisNote.created_at * 1000).toLocaleString()),
 					(item.pubkey = thisNote.pubkey);
 			}
+			console.log(thisProf);
 			if (thisProf != '') {
-				item.name = thisProf.name;
-				item.display_name = thisProf.display_name;
-				item.icon = thisProf.picture;
+				const thisProfile = JSON.parse(thisProf.content);
+				item.name = thisProfile.name;
+				item.display_name = thisProfile.display_name;
+				item.icon = thisProfile.picture;
 			}
 			viewItem[tabSet].push(item);
 			viewItem=viewItem;
