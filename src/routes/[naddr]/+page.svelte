@@ -10,7 +10,7 @@
 		getEvent,
 		getProfile,
 		noteToHex,
-		postEvent,
+		addNoteEvent,
 		removeEvent
 	} from '../../lib/functions';
 	import {
@@ -263,11 +263,11 @@
 		if (viewItem && viewItem[tabSet]) {
 			viewItem[tabSet].splice(nowViewIndex, 1);
 		}
-		viewItem=viewItem;
+		viewItem = viewItem;
 		console.log(viewItem);
 		viewProgress = false;
 	}
-	$: viewItem = viewItem;
+
 	/**
 	 * @type {AddNoteDialog.dialog}
 	 */
@@ -297,7 +297,89 @@
 	/**
 	 * @param {any} _item
 	 */
-	async function addNote(_item) {}
+	async function addNote(_item) {
+		console.log(_item.detail); //inputの中身
+		try {
+			const hexId = noteToHex(_item.detail);
+			//event30001のリストの中の何番目が目的のイベント化
+			const thisEvent = event30001[tagList.indexOf(tabSet)];
+			const responseEvent = await addNoteEvent(hexId, thisEvent, [relay]);
+
+			//viewItemに追加するためにヤンヤヤンヤする
+			//hexIDからイベント内容を取得
+			/**@type {import('nostr-tools').Event}*/
+			let thisNote = '';
+			let thisProf;
+			let localProf;
+			try {
+				const tmpthisNote = await getEvent([hexId], RelaysforSeach);
+
+				console.log(hexId);
+				console.log(thisNote);
+				thisNote = tmpthisNote[hexId];
+				const thisPubkey = thisNote.pubkey;
+				console.log(thisPubkey);
+				//localに存在するか確認
+				const tmp = localStorage.getItem('profile');
+				if (tmp != null) {
+					localProf = JSON.parse(tmp);
+
+					for (const key in localProf) {
+						//console.log(key);
+						if (key == thisPubkey) {
+							thisProf = localProf[key];
+						}
+					}
+					console.log(thisProf);
+					//ローカルになかったらイベント取りに行く
+				} else if (thisProf == undefined) {
+					const returnProf = await getProfile([thisPubkey], RelaysforSeach);
+					console.log(returnProf);
+					if (returnProf[thisPubkey] !== '') {
+						thisProf = returnProf[thisPubkey];
+						//プロフ取れたらローカルストレージ更新
+						if (localProf != null) {
+							const saveProf = [...localProf, returnProf];
+							localStorage.setItem('profile', JSON.stringify(saveProf));
+						} else {
+							localStorage.setItem('profile', JSON.stringify(returnProf));
+						}
+					}
+				}
+			} catch (error) {
+				//note内容取得失敗
+				console.log(error);
+			}
+			//viewEvent整える
+			let item = {
+				id: hexId,
+				noteId: nip19.noteEncode(hexId),
+				content: 'unknown',
+				date: 'unknown',
+				pubkey: 'unknown',
+				name: 'undefined',
+				display_name: 'undefined',
+				icon: 'undefined',
+				isMenuOpen: false //メニューの開閉状態
+			};
+			if (thisNote != undefined || thisNote != '') {
+				item.content = thisNote.content;
+				(item.date = new Date(thisNote.created_at * 1000).toLocaleString()),
+					(item.pubkey = thisNote.pubkey);
+			}
+			if (thisProf != '') {
+				item.name = thisProf.name;
+				item.display_name = thisProf.display_name;
+				item.icon = thisProf.picture;
+			}
+			viewItem[tabSet].push(item);
+			viewItem=viewItem;
+		} catch (error) {
+			//addNoteしっぱいしたらViewItem更新しない
+			console.log(error);
+		}
+		closeDialog() ;
+	}
 
 	//$:index=viewItem.indexOf(tabSet);
 </script>

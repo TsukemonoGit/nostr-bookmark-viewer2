@@ -271,7 +271,7 @@ export async function getProfile(pubkeyList,RelaysforSeach) {
  * @return 成功したら送ったeventを返すよ
  * 
  */
-export async function postEvent(noteID, _event, relays) {
+export async function addNoteEvent(noteID, _event, relays) {
     console.log(_event);
     console.log(noteID);
     console.log(relays);
