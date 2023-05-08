@@ -133,7 +133,7 @@
 <div class="main">
 	<p class="hazimeni">
 		ブックマークを取得する公開鍵とリレーを設定してください<br />
-		ブラウザ拡張のpreferred relaysにリレーを登録しておくとリレーURLの入力が楽になります。<br />
+		ブラウザ拡張のpreferred relaysにリレーを登録しておくとリレーURLの入力が楽になります。<br /><br />
 		なんもわからん人間が作ってるのでご利用は自己責任でお願いします。
 	</p>
 	<button type="button" id="btn1" class="btn variant-filled-primary" on:click={onClickNip07}
@@ -166,6 +166,21 @@
     <error>{message}</error>
     {/if}
     
+</div>
+<hr />
+
+<div id="footer">
+	Github: <a
+		href="https://github.com/TsukemonoGit/nostr-bookmark-viewer2"
+		target="_blank"
+		rel="noopener noreferrer">TsukemonoGit/nostr-bookmark-viewer2</a
+	> <br />
+	Author:
+	<a
+		href="https://nostx.shino3.net/npub1sjcvg64knxkrt6ev52rywzu9uzqakgy8ehhk8yezxmpewsthst6sw3jqcw"
+		target="_blank"
+		rel="noopener noreferrer">mono(Nostr)</a
+	>
 </div>
 
 <style>
