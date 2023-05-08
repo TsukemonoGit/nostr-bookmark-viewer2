@@ -35,12 +35,12 @@
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		"wss://relay.nostr.band",
-		"wss://nostr.wine",
-		"wss://universe.nostrich.land",
-		"wss://relay.damus.io",
-		//'wss://nostream.localtest.me',
-		//'ws://localhost:7000'
+		//"wss://relay.nostr.band",
+		//"wss://nostr.wine",
+		//"wss://universe.nostrich.land",
+		//"wss://relay.damus.io",
+		'wss://nostream.localtest.me',
+		'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
@@ -75,6 +75,7 @@
 
 	//コンポーネントが最初に DOM にレンダリングされた後に実行されます(?)
 	onMount(async () => {
+		nowLoading = true;
 		try {
 			const address = nip19.decode($page.params.naddr);
 			// @ts-ignore
@@ -140,6 +141,7 @@
 			console.log(errorMessage);
 			return;
 		}
+		nowLoading = false;
 	});
 
 	/**
@@ -311,8 +313,8 @@
 			const responseEvent = await addNoteEvent(hexId, thisEvent, [relay]);
 			//event30001のリストを更新
 			console.log(responseEvent);
-			if(responseEvent!=null){
-				event30001[tagList.indexOf(tabSet)]=responseEvent;
+			if (responseEvent != null) {
+				event30001[tagList.indexOf(tabSet)] = responseEvent;
 			}
 			//viewItemに追加するためにヤンヤヤンヤする
 			//hexIDからイベント内容を取得
@@ -424,15 +426,14 @@
 		try {
 			const thisEvent = await createNewTag(newTag, pubkey, [relay]);
 			//追加したものをEvent30001に追加します
-			
-				event30001.push(thisEvent);
-				console.log(event30001);
-				//tagListにも追加します
-				tagList.push(newTag);
-				tagList = tagList;
-				//viewItemに空箱を追加します
-				viewItem[newTag] = [];
-			
+
+			event30001.push(thisEvent);
+			console.log(event30001);
+			//tagListにも追加します
+			tagList.push(newTag);
+			tagList = tagList;
+			//viewItemに空箱を追加します
+			viewItem[newTag] = [];
 		} catch (error) {
 			console.log(error);
 		}
@@ -469,24 +470,23 @@
 		toastStore.trigger(t);
 	}
 
-	
 	/**
 	 * @param {import("nostr-tools").Event} deleteEvent
 	 */
 	async function deleteTagEvent(deleteEvent) {
-  const isSuccess = await DereteTag(deleteEvent.id, pubkey, [relay]);
-  console.log(isSuccess);
-  if (isSuccess) {
-    //成功したらViewItemからけして　タブリストからも消す
-    const thisTab = deleteEvent.tags[0][1];
-	console.log(viewItem[thisTab]);
-    delete viewItem[thisTab];
-    tagList = tagList.filter(tag => tag !== thisTab);
-    tabSet = tagList[0];
-  } else {
-    console.log('削除失敗したかも');
-  }
-}
+		const isSuccess = await DereteTag(deleteEvent.id, pubkey, [relay]);
+		console.log(isSuccess);
+		if (isSuccess) {
+			//成功したらViewItemからけして　タブリストからも消す
+			const thisTab = deleteEvent.tags[0][1];
+			console.log(viewItem[thisTab]);
+			delete viewItem[thisTab];
+			tagList = tagList.filter((tag) => tag !== thisTab);
+			tabSet = tagList[0];
+		} else {
+			console.log('削除失敗したかも');
+		}
+	}
 </script>
 
 <Toast />
@@ -502,7 +502,7 @@
 </div>
 <hr />
 
-{#await getBookmarks}
+{#await onMount}
 	<ProgressRadial ... stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
 {:then book}
 	<TabGroup>
@@ -630,7 +630,7 @@
 		display: flex;
 		width: 100%;
 	}
-	
+
 	.footer-menu {
 		display: block;
 		position: fixed;
@@ -638,13 +638,17 @@
 		bottom: 10px;
 		z-index: 100;
 	}
+	.progress{
+		margin-left: auto;
+		display:inline-flex;
+	}
 	.footer-btn {
 		margin: 5px;
 	}
 	.space {
 		padding: 2em;
 	}
-	.content{
+	.content {
 		white-space: pre-wrap;
 	}
 </style>
