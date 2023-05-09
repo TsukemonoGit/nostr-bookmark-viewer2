@@ -32,6 +32,7 @@
 	import AddNoteDialog from '../AddNoteDialog.svelte';
 	import { add_classes, each } from 'svelte/internal';
 	import EditTagDialog from '../EditTagDialog.svelte';
+	import Content from '../Content.svelte';
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
@@ -580,7 +581,10 @@
 
 							<!-- Router Slot -->
 							<slot>
-								<div class="content">{note.content}</div>
+								<div class="content">
+									
+								<Content bind:note={note.content}/>
+								</div>
 							</slot>
 
 							<!-- ---- / ---- -->
