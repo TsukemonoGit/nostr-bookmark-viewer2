@@ -35,17 +35,17 @@
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		"wss://relay.nostr.band",
-		"wss://nostr.wine",
-		"wss://universe.nostrich.land",
-		"wss://relay.damus.io",
+		'wss://relay.nostr.band',
+		'wss://nostr.wine',
+		'wss://universe.nostrich.land',
+		'wss://relay.damus.io'
 		//'wss://nostream.localtest.me',
 		//'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
 	/**@type {import('nostr-tools').Event[]} */
-	let event30001=[]; //受信したイベントたち（修正するときに使う）
+	let event30001 = []; //受信したイベントたち（修正するときに使う）
 	/**@type {string}*/
 	let relay;
 
@@ -487,9 +487,10 @@
 	}
 </script>
 
-<div style="color:coral">ご利用は自己責任でお願いします</div>
 <Toast />
-<div>
+
+<p style="color:coral">ご利用は自己責任でお願いします</p>
+<div class="head-li">
 	<ul class="list-dl">
 		<li>
 			pubkey: {pubkey}
@@ -649,5 +650,8 @@
 	}
 	.content {
 		white-space: pre-wrap;
+	}
+	.head-li {
+		word-wrap: break-word;
 	}
 </style>
