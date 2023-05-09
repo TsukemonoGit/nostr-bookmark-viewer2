@@ -35,12 +35,12 @@
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		'wss://relay.nostr.band',
-		'wss://nostr.wine',
-		'wss://universe.nostrich.land',
-		'wss://relay.damus.io'
+		//'wss://relay.nostr.band',
+		//'wss://nostr.wine',
+		//'wss://universe.nostrich.land',
+		//'wss://relay.damus.io'
 		//'wss://nostream.localtest.me',
-		//'ws://localhost:7000'
+		'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
@@ -268,7 +268,7 @@
 						response: () => deleteNote(viewItem[tabSet][nowViewIndex].id)
 					},
 					timeout: 10000,
-					classes:"rounded-full"
+					classes: 'rounded-full'
 					//background:
 					//	'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white width-filled'
 				};
@@ -317,35 +317,29 @@
 	/**
 	 * @param {any} _item
 	 */
-	async function addNote(_item) {
+	 async function addNote(_item) {
+	try {
 		const hexId = noteToHex(_item.detail);
 		const thisEvent = event30001[tagList.indexOf(tabSet)];
 		console.log(thisEvent);
+
 		const responseEvent = await addNoteEvent(hexId, thisEvent, [relay]);
 		console.log(responseEvent);
 		if (responseEvent == null) {
-			const t = {
-				message: `fail to add note id:${_item.detail}`,
-				timeout: 3000
-			};
-			toastStore.trigger(t);
-			closeAddNoteDialog();
-			return;
+			throw new Error(`Fail to add note id:${_item.detail}`);
 		}
-
 		event30001[tagList.indexOf(tabSet)] = responseEvent;
 
-		let thisNote, thisProf;
-		try {
-			const tmpthisNote = await getEvent([hexId], RelaysforSeach);
-			console.log(tmpthisNote);
+		let thisNote = null, thisProf = null;
+		const tmpthisNote = await getEvent([hexId], RelaysforSeach);
+		console.log(tmpthisNote);
+		if (tmpthisNote && tmpthisNote[hexId]) {
 			thisNote = tmpthisNote[hexId];
 			const thisPubkey = thisNote.pubkey;
-
 			let localProf = JSON.parse(localStorage.getItem('profile') || '{}');
 			if (localProf[thisPubkey] == null) {
 				const returnProf = await getProfile([thisPubkey], RelaysforSeach);
-				if (returnProf[thisPubkey] !== '') {
+				if (returnProf && returnProf[thisPubkey] !== '') {
 					thisProf = returnProf[thisPubkey];
 					localProf = { ...localProf, ...returnProf };
 					localStorage.setItem('profile', JSON.stringify(localProf));
@@ -353,15 +347,6 @@
 			} else {
 				thisProf = localProf[thisPubkey];
 			}
-		} catch (error) {
-			console.log(error);
-			const t = {
-				message: `fail to add note id:${_item.detail}`,
-				timeout: 3000
-			};
-			toastStore.trigger(t);
-			closeAddNoteDialog();
-			return;
 		}
 
 		let item = {
@@ -390,10 +375,17 @@
 
 		viewItem[tabSet].push(item);
 		viewItem = viewItem;
-
+	} catch (error) {
+		console.log(error);
+		const t = {
+			message: `Fail to add note id:${_item.detail}`,
+			timeout: 3000
+		};
+		toastStore.trigger(t);
+	} finally {
 		closeAddNoteDialog();
 	}
-
+}
 	//----------------------------EditNoteDialog
 	function openEditTagDialog() {
 		dialogMessage = '';
@@ -461,9 +453,8 @@
 				label: 'DELETE',
 				response: () => deleteTagEvent(thisEvent)
 			},
-			timeout: 10000,
-			classes:"rounded-full"
-			//background:
+			timeout: 10000
+
 			//	'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white width-filled'
 		};
 		toastStore.trigger(t);

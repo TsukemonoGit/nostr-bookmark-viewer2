@@ -281,6 +281,7 @@ export async function addNoteEvent(noteID, _event, relays) {
 
 
     // @ts-ignore
+    try{
     const event = await window.nostr.signEvent({
         content: _event.content,
         kind: _event.kind,
@@ -312,6 +313,7 @@ export async function addNoteEvent(noteID, _event, relays) {
            
         });
     });
+}catch(error){throw new Error('拡張機能が開けませんでした');}
     
 }
 
