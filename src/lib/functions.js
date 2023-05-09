@@ -85,7 +85,7 @@ export async function getBookmarks(author, relay) {
  */
 export function pubToHex(pubkey) {
     let author = pubkey;
-    if(author==""){ throw new Error("error");}
+    if (author == "") { throw new Error("error"); }
     console.log(pubkey.slice(0, 4))
     if (pubkey.slice(0, 4) == "npub") {
         console.log(pubkey.slice(0, 4))
@@ -95,9 +95,9 @@ export function pubToHex(pubkey) {
             throw new Error("error");
         }
     }
-    try{
-        const test =nip19.npubEncode(author);
-    }catch{
+    try {
+        const test = nip19.npubEncode(author);
+    } catch {
         throw new Error("error");
     }
     return author
@@ -165,7 +165,7 @@ let RelaysforSeach = [
  * @return {Promise<{[key: string]: import("nostr-tools").Event;}>} ;//, string[]]>};
  * @param {string[]} RelaysforSeach
  */
-export async function getEvent(idList , RelaysforSeach) {
+export async function getEvent(idList, RelaysforSeach) {
     /**
      * 
      */
@@ -217,7 +217,7 @@ export async function getEvent(idList , RelaysforSeach) {
  * @return {Promise<{[key: string]: import("nostr-tools").Event|""}>} key:pubkeyごとのprofileEvent
  * @param {string[]} RelaysforSeach
  */
-export async function getProfile(pubkeyList,RelaysforSeach) {
+export async function getProfile(pubkeyList, RelaysforSeach) {
     let profiles = pubkeyList.reduce((list, id) => {
         // @ts-ignore
         list[id] = "";
@@ -231,7 +231,7 @@ export async function getProfile(pubkeyList,RelaysforSeach) {
         }];
     const pool = new SimplePool();
     let sub = pool.sub(RelaysforSeach, filter);
-    
+
     const result = new Promise((resolve) => {
 
         const timeoutID = setTimeout(() => {
@@ -239,15 +239,15 @@ export async function getProfile(pubkeyList,RelaysforSeach) {
         }, 5000);
 
         sub.on('event', event => {
-        
+
             // @ts-ignore
             console.log(event.pubkey);
-             // @ts-ignore
+            // @ts-ignore
             profiles[event.pubkey] = event;
         });
 
         sub.on("eose", () => {
-       console.log("eose");
+            console.log("eose");
             sub.unsub(); //イベントの購読を停止
             clearTimeout(timeoutID); //settimeoutのタイマーより早くeoseを受け取ったら、setTimeoutをキャンセルさせる。
             resolve(profiles);
@@ -276,52 +276,49 @@ export async function addNoteEvent(noteID, _event, relays) {
     console.log(noteID);
     console.log(relays);
 
-    const pushNote = ['e', noteID];
-    _event.tags.push(pushNote);
+    _event.tags.push(['e', noteID]);
 
-
-    // @ts-ignore
-    try{
-    const event = await window.nostr.signEvent({
-        content: _event.content,
-        kind: _event.kind,
-        pubkey: _event.pubkey,
-        created_at: Math.floor(Date.now() / 1000),
-        tags: _event.tags,
-    });
-    event.id = getEventHash(event);
-
-    const pool = new SimplePool();
-    let pub = pool.publish(relays, event);
-    return new Promise((resolve) => {
-        const timeoutID = setTimeout(() => {
-            resolve(null);
-        }, 5000);
-
-        pub.on("ok", () => {
-            console.log(`${relays.url} has accepted our event`);
-            clearTimeout(timeoutID);
-            resolve(event);
-            
+    try {
+        const event = await window.nostr.signEvent({
+            content: _event.content,
+            kind: _event.kind,
+            pubkey: _event.pubkey,
+            created_at: Math.floor(Date.now() / 1000),
+            tags: _event.tags,
         });
 
-        // @ts-ignore
-        pub.on("failed", (reason) => {
-            console.log(`failed to publish to: ${reason}`);
-            clearTimeout(timeoutID);
-            resolve(null);
-           
+        event.id = getEventHash(event);
+
+        const pool = new SimplePool();
+        const pub = pool.publish(relays, event);
+
+        return new Promise((resolve) => {
+            const timeoutID = setTimeout(() => {
+                resolve(null);
+            }, 5000);
+
+            pub.on("ok", () => {
+                console.log(`${relays.url} has accepted our event`);
+                clearTimeout(timeoutID);
+                resolve(event);
+            });
+
+            pub.on("failed", (reason) => {
+                console.log(`failed to publish to: ${reason}`);
+                clearTimeout(timeoutID);
+                resolve(null);
+            });
         });
-    });
-}catch(error){throw new Error('拡張機能が開けませんでした');}
-    
+    } catch (error) {
+        throw new Error('拡張機能が読み込めませんでした');
+    }
 }
 
 /**
  * @param {any} noteHexId
  * @param {string[]} RelaysforSeach
  */
-export async function getSingleEvent(noteHexId,RelaysforSeach) {
+export async function getSingleEvent(noteHexId, RelaysforSeach) {
     /**
     * @type {import("nostr-tools").Event}
     */
@@ -373,38 +370,41 @@ export async function removeEvent(hexid, _event, relays) {
 
     tags = tags.filter(tags => tags[1] !== hexid);
 
-
-    // @ts-ignore
-    const event = await window.nostr.signEvent({
-        content: _event.content,
-        kind: _event.kind,
-        pubkey: _event.pubkey,
-        created_at: Math.floor(Date.now() / 1000),
-        tags: tags,
-    });
-    event.id = getEventHash(event);
-    const pool = new SimplePool();
-    let pub = pool.publish(relays, event);
-    return new Promise((resolve) => {
-        const timeoutID = setTimeout(() => {
-            resolve(null);
-        }, 5000);
-
-        pub.on("ok", () => {
-            console.log(`${relays.url} has accepted our event`);
-            clearTimeout(timeoutID);
-            resolve(event);
-            
-        });
-
+    try {
         // @ts-ignore
-        pub.on("failed", (reason) => {
-            console.log(`failed to publish to: ${reason}`);
-            clearTimeout(timeoutID);
-            resolve(null);
-           
+        const event = await window.nostr.signEvent({
+            content: _event.content,
+            kind: _event.kind,
+            pubkey: _event.pubkey,
+            created_at: Math.floor(Date.now() / 1000),
+            tags: tags,
         });
-    });
+        event.id = getEventHash(event);
+        const pool = new SimplePool();
+        let pub = pool.publish(relays, event);
+        return new Promise((resolve) => {
+            const timeoutID = setTimeout(() => {
+                resolve(null);
+            }, 5000);
+
+            pub.on("ok", () => {
+                console.log(`${relays.url} has accepted our event`);
+                clearTimeout(timeoutID);
+                resolve(event);
+
+            });
+
+            // @ts-ignore
+            pub.on("failed", (reason) => {
+                console.log(`failed to publish to: ${reason}`);
+                clearTimeout(timeoutID);
+                resolve(null);
+
+            });
+        });
+    } catch (error) {
+        throw new Error('拡張機能が読み込めませんでした');
+    }
 }
 
 
@@ -415,28 +415,32 @@ export async function removeEvent(hexid, _event, relays) {
  * @param {any} relays
  */
 export async function createNewTag(tagName, pubkey, relays) {
-    // @ts-ignore
-    const event = await window.nostr.signEvent({
-        content: "",
-        kind: 30001,
-        pubkey: pubkey,
-        created_at: Math.floor(Date.now() / 1000),
-        tags: [['d', tagName]],
-    });
-    event.id = getEventHash(event);
-    const pool = new SimplePool();
-    let pub = pool.publish(relays, event);
-    pub.on("ok", () => {
-        console.log(`${relays.url} has accepted our event`);
-    });
-    // @ts-ignore
-    pub.on("failed", (reason) => {
-        console.log(
-            `failed to publish to: ${reason}`
-        );
-    });
+    try {
+        // @ts-ignore
+        const event = await window.nostr.signEvent({
+            content: "",
+            kind: 30001,
+            pubkey: pubkey,
+            created_at: Math.floor(Date.now() / 1000),
+            tags: [['d', tagName]],
+        });
+        event.id = getEventHash(event);
+        const pool = new SimplePool();
+        let pub = pool.publish(relays, event);
+        pub.on("ok", () => {
+            console.log(`${relays.url} has accepted our event`);
+        });
+        // @ts-ignore
+        pub.on("failed", (reason) => {
+            console.log(
+                `failed to publish to: ${reason}`
+            );
+        });
 
-    return event;
+        return event;
+    } catch (error) {
+        throw new Error('拡張機能が読み込めませんでした');
+    }
 }
 
 
@@ -445,28 +449,30 @@ export async function createNewTag(tagName, pubkey, relays) {
  * @param {string} pubkey
  * @param {any} relays
  */
-export async function DereteTag(eventID, pubkey, relays){
-    const event = await window.nostr.signEvent({
-      content: "",
-      kind: 5,
-      pubkey: pubkey,
-      created_at: Math.floor(Date.now() / 1000),
-      tags: [['e', eventID]],
-    });
-    event.id = getEventHash(event);
-    const pool = new SimplePool();
-    return new Promise((resolve, reject) => {
-      const pub = pool.publish(relays, event);
-      pub.on("ok", () => {
-        console.log(`${relays.url} has accepted our event`);
-        resolve(true);
-      });
-      pub.on("failed", (reason) => {
-        console.log(`failed to publish to: ${reason}`);
-        resolve(false);
-      });
-    });
-  }
+export async function DereteTag(eventID, pubkey, relays) {
+    try {
+        const event = await window.nostr.signEvent({
+            content: "",
+            kind: 5,
+            pubkey: pubkey,
+            created_at: Math.floor(Date.now() / 1000),
+            tags: [['e', eventID]],
+        });
+        event.id = getEventHash(event);
+        const pool = new SimplePool();
+        return new Promise((resolve, reject) => {
+            const pub = pool.publish(relays, event);
+            pub.on("ok", () => {
+                console.log(`${relays.url} has accepted our event`);
+                resolve(true);
+            });
+            pub.on("failed", (reason) => {
+                console.log(`failed to publish to: ${reason}`);
+                resolve(false);
+            });
+        });
+    } catch { throw new Error('拡張機能が読み込めませんでした'); }
+}
 
 /**
  * @param {{[key:string]: import("nostr-tools").Event}} eventList
@@ -476,15 +482,15 @@ export function formatPubkeyList(eventList) {
          * @type {string[]}
          */
     let pubkeyArray = [];
-  //  console.log(eventList);
-    for (let item=0 ;item<Object.keys(eventList).length;item++) {
+    //  console.log(eventList);
+    for (let item = 0; item < Object.keys(eventList).length; item++) {
         const key = eventList[Object.keys(eventList)[item]];
-       // console.log(item);
+        // console.log(item);
         // @ts-ignore
         if (!pubkeyArray.includes(key.pubkey)) {
             // @ts-ignore
-       //     console.log(pubkeyArray.includes(key.pubkey));
-              // @ts-ignore
+            //     console.log(pubkeyArray.includes(key.pubkey));
+            // @ts-ignore
             pubkeyArray.push(key.pubkey);
         }
     }

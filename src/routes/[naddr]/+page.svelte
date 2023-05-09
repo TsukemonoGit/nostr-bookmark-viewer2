@@ -35,12 +35,12 @@
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		'wss://relay.nostr.band',
-		'wss://nostr.wine',
-		'wss://universe.nostrich.land',
-		'wss://relay.damus.io'
+		//'wss://relay.nostr.band',
+		//'wss://nostr.wine',
+		//'wss://universe.nostrich.land',
+		//'wss://relay.damus.io'
 		//'wss://nostream.localtest.me',
-	//	'ws://localhost:7000'
+		'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
@@ -145,9 +145,18 @@
 			}
 			//console.log(test);
 			//viewItem = test;
-		} catch {
-			const errorMessage = 'naddr decode error';
-			console.log(errorMessage);
+		} catch (error) {
+			let errorMessage = 'naddr decode error';
+			if (error != null) {
+				errorMessage = error;
+			}
+			/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+			const t = {
+				message: errorMessage,
+				timeout: 10000,
+				background: 'bg-orange-500 text-white width-filled '
+			};
+			toastStore.trigger(t);
 			return;
 		}
 		nowLoading = false;
@@ -248,7 +257,8 @@
 						/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 						const t = {
 							message: 'failed to copy',
-							timeout: 3000
+							timeout: 3000,
+							background: 'bg-orange-500 text-white width-filled '
 						};
 						toastStore.trigger(t);
 					}
@@ -268,7 +278,7 @@
 						response: () => deleteNote(viewItem[tabSet][nowViewIndex].id)
 					},
 					timeout: 10000,
-					classes: 'rounded-full'
+					background: 'bg-red-500 text-white width-filled '
 					//background:
 					//	'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white width-filled'
 				};
@@ -317,75 +327,81 @@
 	/**
 	 * @param {any} _item
 	 */
-	 async function addNote(_item) {
-	try {
-		const hexId = noteToHex(_item.detail);
-		const thisEvent = event30001[tagList.indexOf(tabSet)];
-		console.log(thisEvent);
+	async function addNote(_item) {
+		try {
+			const hexId = noteToHex(_item.detail);
+			const thisEvent = event30001[tagList.indexOf(tabSet)];
+			console.log(thisEvent);
 
-		const responseEvent = await addNoteEvent(hexId, thisEvent, [relay]);
-		console.log(responseEvent);
-		if (responseEvent == null) {
-			throw new Error(`Fail to add note id:${_item.detail}`);
-		}
-		event30001[tagList.indexOf(tabSet)] = responseEvent;
-
-		let thisNote = null, thisProf = null;
-		const tmpthisNote = await getEvent([hexId], RelaysforSeach);
-		console.log(tmpthisNote);
-		if (tmpthisNote && tmpthisNote[hexId]) {
-			thisNote = tmpthisNote[hexId];
-			const thisPubkey = thisNote.pubkey;
-			let localProf = JSON.parse(localStorage.getItem('profile') || '{}');
-			if (localProf[thisPubkey] == null) {
-				const returnProf = await getProfile([thisPubkey], RelaysforSeach);
-				if (returnProf && returnProf[thisPubkey] !== '') {
-					thisProf = returnProf[thisPubkey];
-					localProf = { ...localProf, ...returnProf };
-					localStorage.setItem('profile', JSON.stringify(localProf));
-				}
-			} else {
-				thisProf = localProf[thisPubkey];
+			const responseEvent = await addNoteEvent(hexId, thisEvent, [relay]);
+			console.log(responseEvent);
+			if (responseEvent == null) {
+				throw new Error(`Fail to add note id:${_item.detail}`);
 			}
-		}
+			event30001[tagList.indexOf(tabSet)] = responseEvent;
 
-		let item = {
-			id: hexId,
-			noteId: nip19.noteEncode(hexId),
-			content: 'unknown',
-			date: 'unknown',
-			pubkey: 'unknown',
-			name: 'undefined',
-			display_name: 'undefined',
-			icon: 'undefined',
-			isMenuOpen: false //メニューの開閉状態
-		};
-		if (thisNote && thisNote.content !== undefined && thisNote.content.trim() !== '') {
-			item.content = thisNote.content;
-			item.date = new Date(thisNote.created_at * 1000).toLocaleString();
-			item.pubkey = thisNote.pubkey;
-		}
+			let thisNote = null,
+				thisProf = null;
+			const tmpthisNote = await getEvent([hexId], RelaysforSeach);
+			console.log(tmpthisNote);
+			if (tmpthisNote && tmpthisNote[hexId]) {
+				thisNote = tmpthisNote[hexId];
+				const thisPubkey = thisNote.pubkey;
+				let localProf = JSON.parse(localStorage.getItem('profile') || '{}');
+				if (localProf[thisPubkey] == null) {
+					const returnProf = await getProfile([thisPubkey], RelaysforSeach);
+					if (returnProf && returnProf[thisPubkey] !== '') {
+						thisProf = returnProf[thisPubkey];
+						localProf = { ...localProf, ...returnProf };
+						localStorage.setItem('profile', JSON.stringify(localProf));
+					}
+				} else {
+					thisProf = localProf[thisPubkey];
+				}
+			}
 
-		if (thisProf && thisProf.content !== undefined && thisProf.content.trim() !== '') {
-			const thisProfile = JSON.parse(thisProf.content);
-			item.name = thisProfile.name;
-			item.display_name = thisProfile.display_name;
-			item.icon = thisProfile.picture;
-		}
+			let item = {
+				id: hexId,
+				noteId: nip19.noteEncode(hexId),
+				content: 'unknown',
+				date: 'unknown',
+				pubkey: 'unknown',
+				name: 'undefined',
+				display_name: 'undefined',
+				icon: 'undefined',
+				isMenuOpen: false //メニューの開閉状態
+			};
+			if (thisNote && thisNote.content !== undefined && thisNote.content.trim() !== '') {
+				item.content = thisNote.content;
+				item.date = new Date(thisNote.created_at * 1000).toLocaleString();
+				item.pubkey = thisNote.pubkey;
+			}
 
-		viewItem[tabSet].push(item);
-		viewItem = viewItem;
-	} catch (error) {
-		console.log(error);
-		const t = {
-			message: `Fail to add note id:${_item.detail}`,
-			timeout: 3000
-		};
-		toastStore.trigger(t);
-	} finally {
-		closeAddNoteDialog();
+			if (thisProf && thisProf.content !== undefined && thisProf.content.trim() !== '') {
+				const thisProfile = JSON.parse(thisProf.content);
+				item.name = thisProfile.name;
+				item.display_name = thisProfile.display_name;
+				item.icon = thisProfile.picture;
+			}
+
+			viewItem[tabSet].push(item);
+			viewItem = viewItem;
+		} catch (error) {
+			console.log(error);
+			let errortext = `Fail to add note id:${_item.detail}`;
+			if (error != null) {
+				errortext = error;
+			}
+			const t = {
+				message: errortext,
+				timeout: 3000,
+				background: 'bg-orange-500 text-white width-filled '
+			};
+			toastStore.trigger(t);
+		} finally {
+			closeAddNoteDialog();
+		}
 	}
-}
 	//----------------------------EditNoteDialog
 	function openEditTagDialog() {
 		dialogMessage = '';
@@ -411,6 +427,7 @@
 		//tag名がかぶってないか確認する
 		if (tagList.includes(newTag)) {
 			dialogMessage = `${newTag}タグすでにあるっぽい`;
+
 			return;
 		}
 		try {
@@ -425,7 +442,18 @@
 			//viewItemに空箱を追加します
 			viewItem[newTag] = [];
 		} catch (error) {
+			let mesage = `tag'${newTag}の作成に失敗しました`;
 			console.log(error);
+			if (error != null) {
+				mesage = error;
+			}
+			/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+			const t = {
+				message: mesage,
+				timeout: 3000,
+				background: 'bg-orange-500 text-white width-filled '
+			};
+			toastStore.trigger(t);
 		}
 		editTagDialog.close();
 	}
@@ -453,8 +481,8 @@
 				label: 'DELETE',
 				response: () => deleteTagEvent(thisEvent)
 			},
-			timeout: 10000
-
+			timeout: 10000,
+			background: 'bg-red-500 text-white width-filled '
 			//	'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white width-filled'
 		};
 		toastStore.trigger(t);
@@ -464,17 +492,31 @@
 	 * @param {import("nostr-tools").Event} deleteEvent
 	 */
 	async function deleteTagEvent(deleteEvent) {
-		const isSuccess = await DereteTag(deleteEvent.id, pubkey, [relay]);
-		console.log(isSuccess);
-		if (isSuccess) {
-			//成功したらViewItemからけして　タブリストからも消す
-			const thisTab = deleteEvent.tags[0][1];
-			console.log(viewItem[thisTab]);
-			delete viewItem[thisTab];
-			tagList = tagList.filter((tag) => tag !== thisTab);
-			tabSet = tagList[0];
-		} else {
-			console.log('削除失敗したかも');
+		try {
+			const isSuccess = await DereteTag(deleteEvent.id, pubkey, [relay]);
+			console.log(isSuccess);
+			if (isSuccess) {
+				//成功したらViewItemからけして　タブリストからも消す
+				const thisTab = deleteEvent.tags[0][1];
+				console.log(viewItem[thisTab]);
+				delete viewItem[thisTab];
+				tagList = tagList.filter((tag) => tag !== thisTab);
+				tabSet = tagList[0];
+			} else {
+				console.log('削除失敗したかも');
+			}
+		} catch (error) {
+			let mesage=`タグの削除に失敗したかも`;
+			if(error!=null){
+				mesage=error;
+			}
+			/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+			const t = {
+				message: mesage,
+				timeout: 3000,
+				background: 'bg-orange-500 text-white width-filled '
+			};
+			toastStore.trigger(t);
 		}
 	}
 </script>
