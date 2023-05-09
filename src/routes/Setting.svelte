@@ -14,14 +14,14 @@
 	let relays = [];
 	let message = '';
 	let pubkey = '';
-    let naddr="";
+    let nprofile="";
 
     //コンポーネントが最初に DOM にレンダリングされた後に実行されます(?)
     onMount(async () => {
-        //local strageに naddr が保存されていたら展開する
-        let naddr = localStorage.getItem("naddr");
-        if(naddr!=null){
-            const address = nip19.decode(naddr);
+        //local strageに nprofile が保存されていたら展開する
+        let nprofile = localStorage.getItem("nprofile");
+        if(nprofile!=null){
+            const address = nip19.decode(nprofile);
             console.log(address);
             // @ts-ignore
             pubkey=address.data.pubkey;
@@ -29,7 +29,7 @@
             // @ts-ignore
             relay=address.data.relays[0];
         }
-        console.log(naddr);
+        console.log(nprofile);
     });
 
 	async function onClickNip07() {
@@ -67,17 +67,17 @@
 
 
         try{
-		   naddr= makeNaddr();
+		   nprofile= makeNprofile();
         }catch{
-            console.log("naddrerror");
+            console.log("nprofileerror");
             return;
         }
 		console.log(message);
-        console.log(naddr);
+        console.log(nprofile);
         //ローカルストレージに保存
-        localStorage.setItem('naddr', naddr);
+        localStorage.setItem('nprofile', nprofile);
         //次へ
-        await goto(naddr);
+        await goto(nprofile);
     }
 
     //--------------------------------------------------------
@@ -114,17 +114,17 @@
         }
 	}
 
-	function makeNaddr() {
+	function makeNprofile() {
 		/**
-		 * @type {import("nostr-tools/lib/nip19").AddressPointer }
+		 * @type {import("nostr-tools/lib/nip19").ProfilePointer }
 		 */
-		const address = {
-			identifier: '', //it is the identifier (the "d" tag) of the event being referenced
+		const profile = {
+			//identifier: '', //it is the identifier (the "d" tag) of the event being referenced
 			pubkey: pubkey,
-			kind: 30001,
+			//kind: 30001,
 			relays: [relay]
 		};
-		return nip19.naddrEncode(address);	
+		return nip19.nprofileEncode(profile);	
 	}
 
 </script>

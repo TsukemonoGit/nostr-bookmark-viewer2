@@ -77,11 +77,11 @@
 	onMount(async () => {
 		nowLoading = true;
 		try {
-			const address = nip19.decode($page.params.naddr);
+			const profile = nip19.decode($page.params.nprofile);
 			// @ts-ignore
-			pubkey = address.data.pubkey;
+			pubkey = profile.data.pubkey;
 			// @ts-ignore
-			relay = address.data.relays[0];
+			relay = profile.data.relays[0];
 			//console.log(pubkey);
 			//console.log(relay);
 			event30001 = await getBookmarks(pubkey, relay); //30001イベント受信
@@ -146,7 +146,7 @@
 			//console.log(test);
 			//viewItem = test;
 		} catch (error) {
-			let errorMessage = 'naddr decode error';
+			let errorMessage = 'nprofile decode error';
 			if (error != null) {
 				errorMessage = error;
 			}
