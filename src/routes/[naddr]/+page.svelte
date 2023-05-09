@@ -272,7 +272,7 @@
 			case 'delete':
 				/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 				const t = await {
-					message: `delete note (${viewItem[tabSet][nowViewIndex].id.slice(0, 10)}...)`,
+					message: `delete note (${viewItem[tabSet][nowViewIndex].noteId.slice(0, 15)}...)`,
 					action: {
 						label: 'DELETE',
 						response: () => deleteNote(viewItem[tabSet][nowViewIndex].id)
