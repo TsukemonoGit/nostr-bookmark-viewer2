@@ -30,7 +30,7 @@
 
 	import PopupMenu from '../PopupMenu.svelte';
 	import AddNoteDialog from '../AddNoteDialog.svelte';
-	import { each } from 'svelte/internal';
+	import { add_classes, each } from 'svelte/internal';
 	import EditTagDialog from '../EditTagDialog.svelte';
 
 	//イベント内容検索用リレーたち
@@ -267,8 +267,8 @@
 						label: 'DELETE',
 						response: () => deleteNote(viewItem[tabSet][nowViewIndex].id)
 					},
-					timeout: 10000
-
+					timeout: 10000,
+					classes:"rounded-full"
 					//background:
 					//	'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white width-filled'
 				};
@@ -461,7 +461,8 @@
 				label: 'DELETE',
 				response: () => deleteTagEvent(thisEvent)
 			},
-			timeout: 10000
+			timeout: 10000,
+			classes:"rounded-full"
 			//background:
 			//	'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white width-filled'
 		};
