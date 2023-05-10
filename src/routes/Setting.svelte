@@ -131,8 +131,8 @@
 		}
 	}
 	function clickRelay(idx) {
-		console.log(idx);
-		relays.splice(idx, 1);
+		console.log(idx.index);
+		relays.splice(idx.index, 1);
 		relays = relays;
 	}
 </script>

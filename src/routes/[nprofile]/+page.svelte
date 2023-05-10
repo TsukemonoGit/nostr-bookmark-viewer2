@@ -36,12 +36,12 @@
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		'wss://relay.nostr.band',
-		'wss://nostr.wine',
-		'wss://universe.nostrich.land',
-		'wss://relay.damus.io'
-		//'wss://nostream.localtest.me',
-		//'ws://localhost:7000'
+		//'wss://relay.nostr.band',
+		//'wss://nostr.wine',
+		//'wss://universe.nostrich.land',
+		//'wss://relay.damus.io'
+		'wss://nostream.localtest.me',
+		'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
@@ -199,8 +199,9 @@
 
 					try {
 						const note = noteList[id];
-						if(note.content!=undefined){
-						item.content = note.content;}
+						if (note.content != undefined) {
+							item.content = note.content;
+						}
 						item.pubkey = nip19.npubEncode(note.pubkey);
 						item.date = new Date(note.created_at * 1000).toLocaleString();
 
@@ -345,7 +346,7 @@
 			const thisEvent = event30001[tagList.indexOf(tabSet)];
 			console.log(thisEvent);
 
-			const responseEvent = await addNoteEvent(hexId, thisEvent,relays);
+			const responseEvent = await addNoteEvent(hexId, thisEvent, relays);
 			console.log(responseEvent);
 			if (responseEvent == null) {
 				throw new Error(`Fail to add note id:${_item.detail}`);
@@ -536,26 +537,26 @@
 			toastStore.trigger(t);
 		}
 	}
-	
 </script>
 
 <Toast />
 
+	
 <p style="color:coral">ご利用は自己責任でお願いします</p>
 <div class="head-li">
 	<ul class="list-dl">
 		<li>
 			pubkey: {pubkey}
 		</li>
-	{#if relays!=undefined}
-	<details>
-		<summary>relays</summary>
-	{#each relays as relay}
-		<li class ="list">
-			{relay}
-		</li>
-		{/each}	
-	</details>
+		{#if relays != undefined}
+			<details>
+				<summary>relays</summary>
+				{#each relays as relay}
+					<li class="list">
+						{relay}
+					</li>
+				{/each}
+			</details>
 		{/if}
 	</ul>
 </div>
@@ -565,9 +566,11 @@
 	<ProgressRadial ... stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
 {:then book}
 	<TabGroup>
-		{#each tagList as tag}
-			<Tab bind:group={tabSet} name={tag} value={tag}>{tag}</Tab>
-		{/each}
+		
+			{#each tagList as tag}
+				<Tab bind:group={tabSet} name={tag} value={tag}>{tag}</Tab>
+			{/each}
+		
 		<!-- Tab Panels --->
 
 		<svelte:fragment slot="panel">
@@ -593,7 +596,7 @@
 
 							<svelte:fragment slot="sidebarRight">
 								<button
-									on:click={()=>onClickMenu(note)}
+									on:click={() => onClickMenu(note)}
 									class="btn-icon btn-icon-sm variant-filled-primary rounded-full"
 									style="position:relative">▼</button
 								>
@@ -618,6 +621,7 @@
 		</svelte:fragment>
 	</TabGroup>
 {/await}
+
 <div class="space" />
 
 <div class="footer-menu">
@@ -718,8 +722,8 @@
 	.head-li {
 		word-wrap: break-word;
 	}
-	.list{
+	.list {
 		padding-left: 1em;
 	}
-
+	
 </style>
