@@ -123,28 +123,27 @@
 		try {
 			await checkExistUrl();
 			relays.push(relay);
-			relays=relays;
-			relay="";
+			relays = relays;
+			relay = '';
 		} catch {
 			message = message + 'リレーURLを確認してください';
 			return;
 		}
-		
 	}
-	function clickRelay(idx){
+	function clickRelay(idx) {
 		console.log(idx);
-		relays.splice(idx,1);
-		relays=relays;
-
-
+		relays.splice(idx, 1);
+		relays = relays;
 	}
 </script>
 
 <div class="main">
 	<p class="hazimeni">
-		ブックマークを取得する公開鍵とリレーを設定してください<br />
-		<s>ブラウザ拡張のpreferred relaysにリレーを登録しておくとリレーURLの入力が楽になります。</s><br /><br
-		/>
+		ブックマークを取得する公開鍵を設定し、接続するリレーをリレーリストに追加してください。<br />
+		リレーが複数の場合、取得したリストの中の最新を表示してるはず...<br/>
+		<s>ブラウザ拡張のpreferred relaysにリレーを登録しておくとリレーURLの入力が楽になります。</s><br
+		/><br />
+
 		なんもわからん人間が作ってるのでご利用は自己責任でお願いします。
 	</p>
 	<button type="button" id="btn1" class="btn variant-filled-primary" on:click={onClickNip07}
@@ -158,22 +157,26 @@
 
 	<div class="content">
 		<p class="relay">リレー(relay)</p>
-		<div class="input-group input-group-divider grid-cols-[1fr_auto]">
-			<input type="text" bind:value={relay} placeholder="wss://..." />
-			<button class="btn variant-filled-secondary" on:click={addRelayList}>add relay</button>
+		<div class="input-group input-group-divider grid-cols-[auto_1fr]">
+			<button class="py-1 btn variant-filled rounded-full" on:click={addRelayList}>add relay</button
+			>
+			<input class="input1" type="text" bind:value={relay} placeholder="wss://..." />
 		</div>
 		{#if relays.length > 0}
-		<ul>
+			<ul id="list">
+				リレーリスト
 				{#each relays as re, index}
-				<div class="list">
-				<li  value={re}>
-					<button class="py-0 btn2 btn variant-filled-secondary rounded-full" on:click={() => clickRelay({index})}>delete</button>
-					{re}
-				</li>
-			</div>
+					<div class="list">
+						<li value={re}>
+							<button
+								class="py-0 btn2 btn variant-filled-primary rounded-full"
+								on:click={() => clickRelay({ index })}>delete</button
+							>
+							{re}
+						</li>
+					</div>
 				{/each}
-		</ul>
-
+			</ul>
 		{/if}
 	</div>
 
@@ -219,8 +222,17 @@
 		margin-bottom: 2em;
 		margin-top: 2em;
 	}
-	.btn2{
+	.btn2 {
 		margin-right: 0.5em;
+	}
+	.input1 {
+		margin-left: 0.5em;
+	}
+	#list{
+		margin-top: 1em;
+		margin-left: 1em;
+		margin-right: 1em;
+		border: solid 1px rgb(88, 88, 88);
 	}
 	
 </style>
