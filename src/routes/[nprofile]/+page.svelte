@@ -36,12 +36,12 @@
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		'wss://relay.nostr.band',
-		'wss://nostr.wine',
-		'wss://universe.nostrich.land',
-		'wss://relay.damus.io'
+		//'wss://relay.nostr.band',
+		//'wss://nostr.wine',
+		//'wss://universe.nostrich.land',
+		//'wss://relay.damus.io'
 		//'wss://nostream.localtest.me',
-		//'ws://localhost:7000'
+		'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
@@ -86,10 +86,19 @@
 			//console.log(pubkey);
 			//console.log(relay);
 			event30001 = await getBookmarks(pubkey, relay); //30001イベント受信
+
 			tagList = event30001.map((event) => event.tags[0][1]);
 			console.log(tagList[0]);
 			if (tagList.length > 0) {
 				tabSet = tagList[0];
+			} else {
+				/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+				const t = {
+					message: 'ブクマ何もないかも。edit tagでタグを追加してね',
+					timeout: 3000,
+					background: 'bg-orange-500 text-white width-filled '
+				};
+				toastStore.trigger(t);
 			}
 
 			const fBookmark = formatBookmark(event30001);
@@ -296,6 +305,7 @@
 
 	async function deleteNote(hexId) {
 		viewProgress = true;
+
 		//event30001のリストの中の何番目が目的のイベント化
 		const thisEvent = event30001[tagList.indexOf(tabSet)];
 		const responseEvent = await removeEvent(hexId, thisEvent, [relay]);
@@ -432,6 +442,7 @@
 			return;
 		}
 		try {
+			nowLoading = true;
 			const thisEvent = await createNewTag(newTag, pubkey, [relay]);
 			//追加したものをEvent30001に追加します
 
@@ -442,6 +453,7 @@
 			tagList = tagList;
 			//viewItemに空箱を追加します
 			viewItem[newTag] = [];
+			tabSet = newTag;
 		} catch (error) {
 			let mesage = `tag'${newTag}の作成に失敗しました`;
 			console.log(error);
@@ -456,6 +468,7 @@
 			};
 			toastStore.trigger(t);
 		}
+		nowLoading = false;
 		editTagDialog.close();
 	}
 
@@ -494,6 +507,7 @@
 	 */
 	async function deleteTagEvent(deleteEvent) {
 		try {
+			nowLoading = true;
 			const isSuccess = await DereteTag(deleteEvent.id, pubkey, [relay]);
 			console.log(isSuccess);
 			if (isSuccess) {
@@ -507,9 +521,9 @@
 				console.log('削除失敗したかも');
 			}
 		} catch (error) {
-			let mesage=`タグの削除に失敗したかも`;
-			if(error!=null){
-				mesage=error;
+			let mesage = `タグの削除に失敗したかも`;
+			if (error != null) {
+				mesage = error;
 			}
 			/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 			const t = {
@@ -517,9 +531,11 @@
 				timeout: 3000,
 				background: 'bg-orange-500 text-white width-filled '
 			};
+			nowLoading = false;
 			toastStore.trigger(t);
 		}
 	}
+	
 </script>
 
 <Toast />
@@ -582,8 +598,7 @@
 							<!-- Router Slot -->
 							<slot>
 								<div class="content">
-									
-								<Content bind:note={note.content}/>
+									<Content bind:note={note.content} />
 								</div>
 							</slot>
 
@@ -596,6 +611,7 @@
 	</TabGroup>
 {/await}
 <div class="space" />
+
 <div class="footer-menu">
 	<button class="btn variant-filled-secondary footer-btn rounded-full" on:click={openAddNoteDialog}
 		>add note</button
@@ -604,6 +620,7 @@
 	<button class="btn variant-filled-secondary footer-btn rounded-full" on:click={openEditTagDialog}
 		>edit tag</button
 	>
+
 	{#if nowLoading}
 		<div class="progress">
 			<ProgressRadial ... stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
@@ -672,6 +689,7 @@
 	.footer-menu {
 		display: block;
 		position: fixed;
+		width: 100%;
 		left: 10px;
 		bottom: 10px;
 		z-index: 100;
@@ -692,4 +710,5 @@
 	.head-li {
 		word-wrap: break-word;
 	}
+
 </style>

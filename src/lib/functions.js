@@ -1,4 +1,5 @@
 import { nip19, relayInit, SimplePool, getEventHash } from 'nostr-tools'
+import { null_to_empty } from 'svelte/internal';
 
 /**
  * @param {string} author
@@ -368,14 +369,29 @@ export async function removeEvent(hexid, _event, relays) {
     let tags = _event.tags;
     //console.log(tags);
 
+    
+    //イベントを更新する。
+    const filter=[{
+        'kinds':[30001],
+        'authors':[_event.pubkey], 
+        '#d':[_event.tags[0][1]]
+    }];
+
+   const result=await reloadEvent(relays,filter);
+   let thisEve=_event;
+   if(result!=null){
+       thisEve=result;
+   }
+    //----------------------------------------------------
+
     tags = tags.filter(tags => tags[1] !== hexid);
 
     try {
         // @ts-ignore
         const event = await window.nostr.signEvent({
-            content: _event.content,
-            kind: _event.kind,
-            pubkey: _event.pubkey,
+            content: thisEve.content,
+            kind: thisEve.kind,
+            pubkey: thisEve.pubkey,
             created_at: Math.floor(Date.now() / 1000),
             tags: tags,
         });
@@ -495,5 +511,43 @@ export function formatPubkeyList(eventList) {
         }
     }
     return pubkeyArray;
+}
+
+
+async function reloadEvent(relays,filter){
+     
+    const pool = new SimplePool();
+    let sub = pool.sub(relays, filter);
+    
+    return await new Promise((resolve) => {
+        /**
+         * @type {import("nostr-tools").Event | null}
+         */
+        let returnEvent;
+        const timeoutID = setTimeout(() => {
+            sub.unsub();
+            resolve(returnEvent);
+        }, 5000);
+
+        sub.on('event', event => {
+            console.log(event);
+            if(returnEvent==null){
+                returnEvent=event;
+            }else{
+               if( returnEvent.created_at< event.created_at){
+                returnEvent=event;
+               }
+            }
+
+        });
+        sub.on("eose", () => {
+            console.log("eose");
+            resolve(returnEvent)
+            sub.unsub(); //イベントの購読を停止
+            clearTimeout(timeoutID); //settimeoutのタイマーより早くeoseを受け取ったら、setTimeoutをキャンセルさせる。
+        });
+
+    });
+
 }
 
