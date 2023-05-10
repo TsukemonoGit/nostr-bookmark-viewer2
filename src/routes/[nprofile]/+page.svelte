@@ -718,5 +718,8 @@
 	.head-li {
 		word-wrap: break-word;
 	}
+	.list{
+		padding-left: 1em;
+	}
 
 </style>
