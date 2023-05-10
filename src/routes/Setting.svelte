@@ -140,7 +140,7 @@
 <div class="main">
 	<p class="hazimeni">
 		ブックマークを取得する公開鍵を設定し、接続するリレーをリレーリストに追加してください。<br />
-		リレーが複数の場合、取得したリストの中の最新を表示してるはず...<br/>
+		リレーが複数の場合、取得したリストの中の最新を表示してるはず...<br />
 		<s>ブラウザ拡張のpreferred relaysにリレーを登録しておくとリレーURLの入力が楽になります。</s><br
 		/><br />
 
@@ -162,9 +162,9 @@
 			>
 			<input class="input1" type="text" bind:value={relay} placeholder="wss://..." />
 		</div>
-		{#if relays.length > 0}
-			<ul id="list">
-				リレーリスト
+		<ul id="list">
+			リレーリスト
+			{#if relays.length > 0}
 				{#each relays as re, index}
 					<div class="list">
 						<li value={re}>
@@ -176,8 +176,8 @@
 						</li>
 					</div>
 				{/each}
-			</ul>
-		{/if}
+			{/if}
+		</ul>
 	</div>
 
 	<button
@@ -228,11 +228,10 @@
 	.input1 {
 		margin-left: 0.5em;
 	}
-	#list{
+	#list {
 		margin-top: 1em;
 		margin-left: 1em;
 		margin-right: 1em;
 		border: solid 1px rgb(88, 88, 88);
 	}
-	
 </style>
