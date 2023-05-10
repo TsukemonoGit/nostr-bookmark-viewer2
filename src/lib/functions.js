@@ -469,18 +469,29 @@ export async function createNewTag(tagName, pubkey, relays) {
 
 
 /**
- * @param {string} eventID
+ *  @param {import("nostr-tools").Event} _event
  * @param {string} pubkey
  * @param {any} relays
  */
-export async function DereteTag(eventID, pubkey, relays) {
+export async function DereteTag(_event, pubkey, relays) {
+     //イベントを更新する。
+  const filter=[{
+    'kinds':[30001],
+    'authors':[_event.pubkey], 
+    '#d':[_event.tags[0][1]]
+}];
+
+const thisEve=await reloadEvent(_event, relays,filter);
+
+//----------------------------------------------------
+
     try {
         const event = await window.nostr.signEvent({
             content: "",
             kind: 5,
             pubkey: pubkey,
             created_at: Math.floor(Date.now() / 1000),
-            tags: [['e', eventID]],
+            tags: [['e', thisEve.id]],
         });
         event.id = getEventHash(event);
         const pool = new SimplePool();

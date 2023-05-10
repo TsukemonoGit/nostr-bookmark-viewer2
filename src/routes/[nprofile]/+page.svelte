@@ -508,7 +508,7 @@
 	async function deleteTagEvent(deleteEvent) {
 		try {
 			nowLoading = true;
-			const isSuccess = await DereteTag(deleteEvent.id, pubkey, [relay]);
+			const isSuccess = await DereteTag(deleteEvent, pubkey, [relay]);
 			console.log(isSuccess);
 			if (isSuccess) {
 				//成功したらViewItemからけして　タブリストからも消す
