@@ -593,7 +593,7 @@
 
 							<svelte:fragment slot="sidebarRight">
 								<button
-									on:click={onClickMenu(note)}
+									on:click={()=>onClickMenu(note)}
 									class="btn-icon btn-icon-sm variant-filled-primary rounded-full"
 									style="position:relative">▼</button
 								>
