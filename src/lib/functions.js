@@ -277,15 +277,26 @@ export async function addNoteEvent(noteID, _event, relays) {
     console.log(noteID);
     console.log(relays);
 
-    _event.tags.push(['e', noteID]);
+  //イベントを更新する。
+  const filter=[{
+    'kinds':[30001],
+    'authors':[_event.pubkey], 
+    '#d':[_event.tags[0][1]]
+}];
+
+const thisEve=await reloadEvent(_event, relays,filter);
+
+//----------------------------------------------------
+
+    thisEve.tags.push(['e', noteID]);
 
     try {
         const event = await window.nostr.signEvent({
-            content: _event.content,
-            kind: _event.kind,
-            pubkey: _event.pubkey,
+            content: thisEve.content,
+            kind: thisEve.kind,
+            pubkey: thisEve.pubkey,
             created_at: Math.floor(Date.now() / 1000),
-            tags: _event.tags,
+            tags: thisEve.tags,
         });
 
         event.id = getEventHash(event);
