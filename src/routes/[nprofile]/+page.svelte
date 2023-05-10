@@ -47,8 +47,8 @@
 	let pubkey;
 	/**@type {import('nostr-tools').Event[]} */
 	let event30001 = []; //受信したイベントたち（修正するときに使う）
-	/**@type {string}*/
-	let relay;
+	/**@type {string[]}*/
+	let relays;
 
 	/**@type {{[key:string]:{id:string;noteId:string;isMenuOpen:boolean;date:string;name:string;icon:string;display_name:string;content:string}[]} | undefined} */
 	let viewItem = {};
@@ -82,10 +82,10 @@
 			// @ts-ignore
 			pubkey = profile.data.pubkey;
 			// @ts-ignore
-			relay = profile.data.relays[0];
+			relays = profile.data.relays;
 			//console.log(pubkey);
-			//console.log(relay);
-			event30001 = await getBookmarks(pubkey, relay); //30001イベント受信
+			console.log(relays[0]);
+			event30001 = await getBookmarks(pubkey, relays); //30001イベント受信
 
 			tagList = event30001.map((event) => event.tags[0][1]);
 			console.log(tagList[0]);
@@ -139,7 +139,7 @@
 				localProfile = { ...localProfile, ...profiles };
 
 				localStorage.setItem('profile', JSON.stringify(localProfile));
-				console.log(localProfile);
+				//console.log(localProfile);
 			}
 			////localStrageに保存
 			//--------------------------------------------------------
@@ -199,7 +199,8 @@
 
 					try {
 						const note = noteList[id];
-						item.content = note.content;
+						if(note.content!=undefined){
+						item.content = note.content;}
 						item.pubkey = nip19.npubEncode(note.pubkey);
 						item.date = new Date(note.created_at * 1000).toLocaleString();
 
@@ -308,7 +309,7 @@
 
 		//event30001のリストの中の何番目が目的のイベント化
 		const thisEvent = event30001[tagList.indexOf(tabSet)];
-		const responseEvent = await removeEvent(hexId, thisEvent, [relay]);
+		const responseEvent = await removeEvent(hexId, thisEvent, relays);
 		event30001[tagList.indexOf(tabSet)] = responseEvent;
 		// viewItemから指定した要素を削除
 		if (viewItem && viewItem[tabSet]) {
@@ -344,7 +345,7 @@
 			const thisEvent = event30001[tagList.indexOf(tabSet)];
 			console.log(thisEvent);
 
-			const responseEvent = await addNoteEvent(hexId, thisEvent, [relay]);
+			const responseEvent = await addNoteEvent(hexId, thisEvent,relays);
 			console.log(responseEvent);
 			if (responseEvent == null) {
 				throw new Error(`Fail to add note id:${_item.detail}`);
@@ -443,7 +444,7 @@
 		}
 		try {
 			nowLoading = true;
-			const thisEvent = await createNewTag(newTag, pubkey, [relay]);
+			const thisEvent = await createNewTag(newTag, pubkey, relays);
 			//追加したものをEvent30001に追加します
 
 			event30001.push(thisEvent);
@@ -508,7 +509,7 @@
 	async function deleteTagEvent(deleteEvent) {
 		try {
 			nowLoading = true;
-			const isSuccess = await DereteTag(deleteEvent, pubkey, [relay]);
+			const isSuccess = await DereteTag(deleteEvent, pubkey, relays);
 			console.log(isSuccess);
 			if (isSuccess) {
 				//成功したらViewItemからけして　タブリストからも消す
@@ -546,9 +547,16 @@
 		<li>
 			pubkey: {pubkey}
 		</li>
-		<li>
-			relay: {relay}
+	{#if relays!=undefined}
+	<details>
+		<summary>relays</summary>
+	{#each relays as relay}
+		<li class ="list">
+			{relay}
 		</li>
+		{/each}	
+	</details>
+		{/if}
 	</ul>
 </div>
 <hr />

@@ -3,81 +3,88 @@ import { null_to_empty } from 'svelte/internal';
 
 /**
  * @param {string} author
- * @param {string} relay 
+ * @param {string[]} relays
  * @return {Promise<import("nostr-tools").Event[]>} 
  * - kind30001のタグごとのイベントex.[{tag:pinのイベント全体},{tag:bookmarkのイベント全体}]
  */
-export async function getBookmarks(author, relay) {
+export async function getBookmarks(author, relays) {
 
-    const relayIni = relayInit(relay);
-    try {
-        await relayIni.connect();
-    } catch (error) {
-        throw new Error("error");
-    }
-    const result = new Promise((resolve) => {
-        let isSuccess = false;
-        const timeoutID = setTimeout(() => {
-            resolve(isSuccess);
-        }, 5000);
-        relayIni.on("connect", () => {
-            console.log("is connected");
-            isSuccess = true;
+    // const relayIni = relayInit(relay);
+    // try {
+    //     await relayIni.connect();
+    // } catch (error) {
+    //     throw new Error("error");
+    // }
 
-            clearTimeout(timeoutID);
-        });
-        relayIni.on("error", () => {
-            console.log("failed to coneccted")
-            isSuccess = false;
 
-            clearTimeout(timeoutID);
-        })
-    });
-    result.then(result => {
-        if (!result) {
-            throw new Error("failed to connect relay")
+    // const result = new Promise((resolve) => {
+    //     let isSuccess = false;
+    //     const timeoutID = setTimeout(() => {
+    //         resolve(isSuccess);
+    //     }, 5000);
+    //     relayIni.on("connect", () => {
+    //         console.log("is connected");
+    //         isSuccess = true;
+
+    //         clearTimeout(timeoutID);
+    //     });
+    //     relayIni.on("error", () => {
+    //         console.log("failed to coneccted")
+    //         isSuccess = false;
+
+    //         clearTimeout(timeoutID);
+    //     })
+    // });
+    // result.then(result => {
+    //     if (!result) {
+    //         throw new Error("failed to connect relay")
+    //     }
+    //     else {
+    //         return true;
+    //     }
+    // });
+    // if (!result) {
+    //     throw new Error("failed to connect relay")
+    // }
+
+
+    // //以下コネクト成功？
+    // const sub = relayIni.sub([
+    //     {
+    //         kinds: [30001],
+    //         authors: [author],
+    //     },
+    // ]);
+
+    const filter = [{
+        kinds: [30001],
+        authors: [author],
+    }];
+
+    const pool = new SimplePool();
+    const sub = pool.sub(relays, filter);
+
+    const bookmarks = new Map();
+    const timeoutID = setTimeout(() => sub.close(), 5000);
+
+    sub.on('event', (event) => {
+        const tag = event.tags[0][1];
+        if (bookmarks.has(tag) && event.created_at <= bookmarks.get(tag).created_at) {
+            return;
         }
-        else {
-            return true;
-        }
+        bookmarks.set(tag, event);
     });
-    if (!result) {
-        throw new Error("failed to connect relay")
-    }
-    //以下コネクト成功？
-    const sub = relayIni.sub([
-        {
-            kinds: [30001],
-            authors: [author],
-        },
-    ]);
 
-    const result2 = new Promise((resolve) => {
-        /**
-         * @type {import("nostr-tools").Event[]}
-         */
-        let _bookmarks = [];
-        const timeoutID = setTimeout(() => {
-
-            resolve(_bookmarks);
-        }, 5000);
-        sub.on("event", (event) => {
-
-            _bookmarks.push(event);
-
-        });
-        sub.on("eose", () => {
-            resolve(_bookmarks);
+    const result = await new Promise((resolve) => {
+        sub.on('eose', () => {
             clearTimeout(timeoutID);
+            resolve(Array.from(bookmarks.values()));
         });
     });
 
-    await result2.then(result => {
-        //  console.log(result)
-        return result;
-    });//このリザルトはプロミスの結果に入る
-    return result2;
+    return result;
 }
+
 
 /**
  * @param {string} pubkey
@@ -191,6 +198,7 @@ export async function getEvent(idList, RelaysforSeach) {
         }, 5000);
 
         sub.on('event', event => {
+           // console.log(event);
             // @ts-ignore
             eventList[event.id] = event;
             //    if (!pubkeys.includes(event.pubkey)) {
@@ -277,16 +285,16 @@ export async function addNoteEvent(noteID, _event, relays) {
     console.log(noteID);
     console.log(relays);
 
-  //イベントを更新する。
-  const filter=[{
-    'kinds':[30001],
-    'authors':[_event.pubkey], 
-    '#d':[_event.tags[0][1]]
-}];
+    //イベントを更新する。
+    const filter = [{
+        'kinds': [30001],
+        'authors': [_event.pubkey],
+        '#d': [_event.tags[0][1]]
+    }];
 
-const thisEve=await reloadEvent(_event, relays,filter);
+    const thisEve = await reloadEvent(_event, relays, filter);
 
-//----------------------------------------------------
+    //----------------------------------------------------
 
     thisEve.tags.push(['e', noteID]);
 
@@ -382,14 +390,14 @@ export async function removeEvent(hexid, _event, relays) {
 
 
     //イベントを更新する。
-    const filter=[{
-        'kinds':[30001],
-        'authors':[_event.pubkey], 
-        '#d':[_event.tags[0][1]]
+    const filter = [{
+        'kinds': [30001],
+        'authors': [_event.pubkey],
+        '#d': [_event.tags[0][1]]
     }];
 
-   const thisEve=await reloadEvent(_event, relays,filter);
- 
+    const thisEve = await reloadEvent(_event, relays, filter);
+
     //----------------------------------------------------
 
     tags = tags.filter(tags => tags[1] !== hexid);
@@ -474,16 +482,16 @@ export async function createNewTag(tagName, pubkey, relays) {
  * @param {any} relays
  */
 export async function DereteTag(_event, pubkey, relays) {
-     //イベントを更新する。
-  const filter=[{
-    'kinds':[30001],
-    'authors':[_event.pubkey], 
-    '#d':[_event.tags[0][1]]
-}];
+    //イベントを更新する。
+    const filter = [{
+        'kinds': [30001],
+        'authors': [_event.pubkey],
+        '#d': [_event.tags[0][1]]
+    }];
 
-const thisEve=await reloadEvent(_event, relays,filter);
+    const thisEve = await reloadEvent(_event, relays, filter);
 
-//----------------------------------------------------
+    //----------------------------------------------------
 
     try {
         const event = await window.nostr.signEvent({
@@ -533,11 +541,11 @@ export function formatPubkeyList(eventList) {
 }
 
 
-async function reloadEvent(_event, relays,filter){
-     
+async function reloadEvent(_event, relays, filter) {
+
     const pool = new SimplePool();
     let sub = pool.sub(relays, filter);
-    
+
     const result = await new Promise((resolve) => {
         /**
          * @type {import("nostr-tools").Event | null}
@@ -550,12 +558,12 @@ async function reloadEvent(_event, relays,filter){
 
         sub.on('event', event => {
             console.log(event);
-            if(returnEvent==null){
-                returnEvent=event;
-            }else{
-               if( returnEvent.created_at< event.created_at){
-                returnEvent=event;
-               }
+            if (returnEvent == null) {
+                returnEvent = event;
+            } else {
+                if (returnEvent.created_at < event.created_at) {
+                    returnEvent = event;
+                }
             }
 
         });
@@ -567,9 +575,9 @@ async function reloadEvent(_event, relays,filter){
         });
 
     });
-    let newEve=_event;
-    if(result!=null && result.created_at>_event.created_at){
-        newEve=result;
+    let newEve = _event;
+    if (result != null && result.created_at > _event.created_at) {
+        newEve = result;
     }
     return newEve;
 }
