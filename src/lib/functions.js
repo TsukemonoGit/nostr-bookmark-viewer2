@@ -369,7 +369,7 @@ export async function removeEvent(hexid, _event, relays) {
     let tags = _event.tags;
     //console.log(tags);
 
-    
+
     //イベントを更新する。
     const filter=[{
         'kinds':[30001],
@@ -377,11 +377,8 @@ export async function removeEvent(hexid, _event, relays) {
         '#d':[_event.tags[0][1]]
     }];
 
-   const result=await reloadEvent(relays,filter);
-   let thisEve=_event;
-   if(result!=null){
-       thisEve=result;
-   }
+   const thisEve=await reloadEvent(_event, relays,filter);
+ 
     //----------------------------------------------------
 
     tags = tags.filter(tags => tags[1] !== hexid);
@@ -514,12 +511,12 @@ export function formatPubkeyList(eventList) {
 }
 
 
-async function reloadEvent(relays,filter){
+async function reloadEvent(_event, relays,filter){
      
     const pool = new SimplePool();
     let sub = pool.sub(relays, filter);
     
-    return await new Promise((resolve) => {
+    const result = await new Promise((resolve) => {
         /**
          * @type {import("nostr-tools").Event | null}
          */
@@ -548,6 +545,10 @@ async function reloadEvent(relays,filter){
         });
 
     });
-
+    let newEve=_event;
+    if(result!=null && result.created_at>_event.created_at){
+        newEve=result;
+    }
+    return newEve;
 }
 
