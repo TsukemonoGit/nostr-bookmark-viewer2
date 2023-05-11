@@ -721,6 +721,8 @@
 	
 	.content {
 		white-space: pre-wrap;
+		max-height: 15em; /* 表示範囲の高さを指定 */
+  		overflow-y: scroll; /* 縦方向にスクロール可能にする */
 	}
 	.head-li {
 		word-wrap: break-word;
