@@ -417,7 +417,9 @@
 			}
 
 			if (thisProf && thisProf.content !== undefined && thisProf.content.trim() !== '') {
+				console.log(thisProf);
 				const thisProfile = JSON.parse(thisProf.content);
+				console.log(thisProfile);
 				item.name = thisProfile.name;
 				item.display_name = thisProfile.display_name;
 				item.icon = thisProfile.picture;
