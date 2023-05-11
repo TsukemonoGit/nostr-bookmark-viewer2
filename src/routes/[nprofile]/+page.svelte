@@ -286,11 +286,15 @@
 				const t = await {
 					message: `delete note (${viewItem[tabSet][nowViewIndex].noteId.slice(0, 15)}...)`,
 					action: {
+						
 						label: 'DELETE',
-						response: () => deleteNote(viewItem[tabSet][nowViewIndex].id)
+						response: () => deleteNote(viewItem[tabSet][nowViewIndex].id),
+						
 					},
 					timeout: 10000,
-					background: 'bg-red-500 text-white width-filled '
+					background: 'bg-red-500 text-white width-filled  rounded-container-token',
+					buttonAction:'btn variant-filled rounded-full',
+					
 					//background:
 					//	'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white width-filled'
 				};
