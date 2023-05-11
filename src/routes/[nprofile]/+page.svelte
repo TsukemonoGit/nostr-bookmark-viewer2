@@ -233,7 +233,7 @@
 		//if (tabSet == '') return;
 		note.isMenuOpen = true;
 		viewItem[tabSet][viewItem[tabSet].indexOf(note)].isMenuOpen = true;
-		console.log(viewItem[tabSet]);
+		//console.log(viewItem[tabSet]);
 		nowViewIndex = viewItem[tabSet].indexOf(note);
 		// // @ts-ignore
 		// viewItem[tabSet][_id].isMenuOpen = !viewItem[tabSet][_id].isMenuOpen;
