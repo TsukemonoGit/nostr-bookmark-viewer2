@@ -36,12 +36,12 @@
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		'wss://relay.nostr.band',
-		'wss://nostr.wine',
-		'wss://universe.nostrich.land',
-		'wss://relay.damus.io'
-		//'wss://nostream.localtest.me',
-		//'ws://localhost:7000'
+		//'wss://relay.nostr.band',
+		//'wss://nostr.wine',
+		//'wss://universe.nostrich.land',
+		//'wss://relay.damus.io'
+		'wss://nostream.localtest.me',
+		'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
@@ -383,12 +383,14 @@
 				thisProf = null;
 			const tmpthisNote = await getEvent([hexId], RelaysforSeach);
 			console.log(tmpthisNote);
-			if (tmpthisNote && tmpthisNote[hexId]) {
+			if (tmpthisNote!=null && tmpthisNote[hexId]!=null) {
 				thisNote = tmpthisNote[hexId];
 				const thisPubkey = thisNote.pubkey;
+				console.log(thisPubkey);
 				let localProf = JSON.parse(localStorage.getItem('profile') || '{}');
-				if (localProf[thisPubkey] == null) {
+				if (localProf[thisPubkey] == null || localProf[thisPubkey]=="") {
 					const returnProf = await getProfile([thisPubkey], RelaysforSeach);
+					console.log(returnProf);
 					if (returnProf && returnProf[thisPubkey] !== '') {
 						thisProf = returnProf[thisPubkey];
 						localProf = { ...localProf, ...returnProf };
