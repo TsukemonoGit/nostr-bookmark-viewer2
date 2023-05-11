@@ -342,6 +342,7 @@
 	 */
 	async function addNote(_item) {
 		try {
+			nowLoading = true;
 			const hexId = noteToHex(_item.detail);
 			const thisEvent = event30001[tagList.indexOf(tabSet)];
 			console.log(thisEvent);
@@ -412,6 +413,7 @@
 			};
 			toastStore.trigger(t);
 		} finally {
+			nowLoading = false;
 			closeAddNoteDialog();
 		}
 	}
@@ -541,7 +543,6 @@
 
 <Toast />
 
-	
 <p style="color:coral">ご利用は自己責任でお願いします</p>
 <div class="head-li">
 	<ul class="list-dl">
@@ -566,70 +567,70 @@
 	<ProgressRadial ... stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
 {:then book}
 	<TabGroup>
-		
-			{#each tagList as tag}
-				<Tab bind:group={tabSet} name={tag} value={tag}>{tag}</Tab>
-			{/each}
-		
+		{#each tagList as tag}
+			<Tab bind:group={tabSet} name={tag} value={tag}>
+				{tag}
+			</Tab>
+		{/each}
 		<!-- Tab Panels --->
 
 		<svelte:fragment slot="panel">
-			{#if viewItem != undefined && Object.keys(viewItem).length > 0}
-				{#each viewItem[tabSet] as note, ind}
-					<div class="note">
-						<AppShell>
-							<svelte:fragment slot="sidebarLeft">
-								<div class="icon-area">
-									<img class="icon" src={note.icon} alt="icon" />
-								</div>
-							</svelte:fragment>
-
-							<svelte:fragment slot="pageHeader">
-								<div class="header">
-									<div class="display_name">
-										{note.display_name}
+			<div class="panel">
+				{#if viewItem != undefined && Object.keys(viewItem).length > 0}
+					{#each viewItem[tabSet] as note, ind}
+						<div class="note">
+							<AppShell>
+								<svelte:fragment slot="sidebarLeft">
+									<div class="icon-area">
+										<img class="icon" src={note.icon} alt="icon" />
 									</div>
-									<div class="name">@{note.name}</div>
-									<div class="date">{note.date}</div>
-								</div>
-							</svelte:fragment>
+								</svelte:fragment>
 
-							<svelte:fragment slot="sidebarRight">
-								<button
-									on:click={() => onClickMenu(note)}
-									class="btn-icon btn-icon-sm variant-filled-primary rounded-full"
-									style="position:relative">▼</button
-								>
+								<svelte:fragment slot="pageHeader">
+									<div class="header">
+										<div class="display_name">
+											{note.display_name}
+										</div>
+										<div class="name">@{note.name}</div>
+										<div class="date">{note.date}</div>
+									</div>
+								</svelte:fragment>
 
-								{#if note.isMenuOpen}
-									<PopupMenu on:item-click={handleItemClick} />
-								{/if}
-							</svelte:fragment>
+								<svelte:fragment slot="sidebarRight">
+									<button
+										on:click={() => onClickMenu(note)}
+										class="btn-icon btn-icon-sm variant-filled-primary rounded-full"
+										style="position:relative">▼</button
+									>
 
-							<!-- Router Slot -->
-							<slot>
-								<div class="content">
-									<Content bind:note={note.content} />
-								</div>
-							</slot>
+									{#if note.isMenuOpen}
+										<PopupMenu on:item-click={handleItemClick} />
+									{/if}
+								</svelte:fragment>
 
-							<!-- ---- / ---- -->
-						</AppShell>
-					</div>
-				{/each}
-			{/if}
+								<!-- Router Slot -->
+								<slot>
+									<div class="content">
+										<Content bind:note={note.content} />
+									</div>
+								</slot>
+
+								<!-- ---- / ---- -->
+							</AppShell>
+						</div>
+					{/each}
+				{/if}
+			</div>
 		</svelte:fragment>
 	</TabGroup>
 {/await}
 
-<div class="space" />
-
 <div class="footer-menu">
-	<button class="btn variant-filled-secondary footer-btn rounded-full" on:click={openAddNoteDialog}
+	<button class="btn variant-ghost-primary footer-btn rounded-ful font-bold" on:click={openAddNoteDialog}
 		>add note</button
 	>
 
-	<button class="btn variant-filled-secondary footer-btn rounded-full" on:click={openEditTagDialog}
+	<button class="btn variant-ghost-secondary footer-btn rounded-full font-bold " on:click={openEditTagDialog}
 		>edit tag</button
 	>
 
@@ -702,7 +703,7 @@
 		display: block;
 		position: fixed;
 		width: 100%;
-		left: 10px;
+		left: 15px;
 		bottom: 10px;
 		z-index: 100;
 	}
@@ -713,9 +714,7 @@
 	.footer-btn {
 		margin: 5px;
 	}
-	.space {
-		padding: 2em;
-	}
+	
 	.content {
 		white-space: pre-wrap;
 	}
@@ -725,5 +724,9 @@
 	.list {
 		padding-left: 1em;
 	}
-	
+	.panel{
+		margin-top: -1em;
+		max-height: calc(100vh - 9em); /* 表示範囲の高さを指定 */
+  		overflow-y: scroll; /* 縦方向にスクロール可能にする */
+	}
 </style>
