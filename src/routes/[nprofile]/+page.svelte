@@ -626,11 +626,11 @@
 {/await}
 
 <div class="footer-menu">
-	<button class="btn variant-ghost-primary footer-btn rounded-ful font-bold" on:click={openAddNoteDialog}
+	<button class="btn variant-soft-primary footer-btn  hover:bg-blue-700 rounded-full font-bold" on:click={openAddNoteDialog}
 		>add note</button
 	>
 
-	<button class="btn variant-ghost-secondary footer-btn rounded-full font-bold " on:click={openEditTagDialog}
+	<button class="btn variant-soft-primary hover:bg-blue-700 footer-btn rounded-full font-bold " on:click={openEditTagDialog}
 		>edit tag</button
 	>
 
