@@ -36,12 +36,12 @@
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		'wss://relay.nostr.band',
-		'wss://nostr.wine',
-		'wss://universe.nostrich.land',
-		'wss://relay.damus.io'
-		//'wss://nostream.localtest.me',
-		//'ws://localhost:7000'
+		//'wss://relay.nostr.band',
+		//'wss://nostr.wine',
+		//'wss://universe.nostrich.land',
+		//'wss://relay.damus.io'
+		'wss://nostream.localtest.me',
+		'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
@@ -286,15 +286,13 @@
 				const t = await {
 					message: `delete note (${viewItem[tabSet][nowViewIndex].noteId.slice(0, 15)}...)`,
 					action: {
-						
 						label: 'DELETE',
-						response: () => deleteNote(viewItem[tabSet][nowViewIndex].id),
-						
+						response: () => deleteNote(viewItem[tabSet][nowViewIndex].id)
 					},
 					timeout: 10000,
 					background: 'bg-red-500 text-white width-filled  rounded-container-token',
-					buttonAction:'btn variant-filled rounded-full',
-					
+					buttonAction: 'btn variant-filled rounded-full'
+
 					//background:
 					//	'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white width-filled'
 				};
@@ -310,16 +308,33 @@
 	//$:console.log(nowTag);
 
 	async function deleteNote(hexId) {
+		/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+		let t;
 		viewProgress = true;
 
 		//event30001のリストの中の何番目が目的のイベント化
 		const thisEvent = event30001[tagList.indexOf(tabSet)];
 		const responseEvent = await removeEvent(hexId, thisEvent, relays);
-		event30001[tagList.indexOf(tabSet)] = responseEvent;
-		// viewItemから指定した要素を削除
-		if (viewItem && viewItem[tabSet]) {
-			viewItem[tabSet].splice(nowViewIndex, 1);
+		console.log(responseEvent);
+		if (!responseEvent.isSuccess) {
+			t = {
+				message: `削除に失敗したかも`,
+				timeout: 3000,
+				background: 'bg-orange-500 text-white width-filled '
+			};
+		} else {
+			t = {
+				message: responseEvent.msg.join("\n"),
+				timeout: 5000,
+			};
+
+			event30001[tagList.indexOf(tabSet)] = responseEvent.event;
+			// viewItemから指定した要素を削除
+			if (viewItem && viewItem[tabSet]) {
+				viewItem[tabSet].splice(nowViewIndex, 1);
+			}
 		}
+		toastStore.trigger(t);
 		viewItem = viewItem;
 		console.log(viewItem);
 		viewProgress = false;
@@ -345,6 +360,8 @@
 	 * @param {any} _item
 	 */
 	async function addNote(_item) {
+		/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+		let t;
 		try {
 			nowLoading = true;
 			const hexId = noteToHex(_item.detail);
@@ -353,10 +370,14 @@
 
 			const responseEvent = await addNoteEvent(hexId, thisEvent, relays);
 			console.log(responseEvent);
-			if (responseEvent == null) {
+			if (!responseEvent.isSuccess) {
 				throw new Error(`Fail to add note id:${_item.detail}`);
 			}
-			event30001[tagList.indexOf(tabSet)] = responseEvent;
+			event30001[tagList.indexOf(tabSet)] = responseEvent.event;
+			t = {
+				message: responseEvent.msg.join("\n"),
+				timeout: 5000
+			};
 
 			let thisNote = null,
 				thisProf = null;
@@ -410,13 +431,13 @@
 			if (error != null) {
 				errortext = error;
 			}
-			const t = {
+			t = {
 				message: errortext,
 				timeout: 3000,
 				background: 'bg-orange-500 text-white width-filled '
 			};
-			toastStore.trigger(t);
 		} finally {
+			toastStore.trigger(t);
 			nowLoading = false;
 			closeAddNoteDialog();
 		}
@@ -440,6 +461,9 @@
 	}
 
 	async function addTag(_item) {
+		/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+		let t;
+
 		dialogMessage = '';
 		console.log(_item.detail); //inputの中身
 		const newTag = _item.detail; //これをついかします
@@ -453,29 +477,40 @@
 			nowLoading = true;
 			const thisEvent = await createNewTag(newTag, pubkey, relays);
 			//追加したものをEvent30001に追加します
+			console.log(thisEvent);
+			if (thisEvent.isSuccess) {
+				event30001.push(thisEvent.event);
+				console.log(event30001);
+				//tagListにも追加します
+				tagList.push(newTag);
+				tagList = tagList;
+				//viewItemに空箱を追加します
+				viewItem[newTag] = [];
+				tabSet = newTag;
 
-			event30001.push(thisEvent);
-			console.log(event30001);
-			//tagListにも追加します
-			tagList.push(newTag);
-			tagList = tagList;
-			//viewItemに空箱を追加します
-			viewItem[newTag] = [];
-			tabSet = newTag;
+				const formattedString = thisEvent.msg.join('\n');
+				t = {
+					message: formattedString,
+					timeout: 5000
+				};
+			} else {
+				t = {
+					message: `tag'${newTag}の作成に失敗しました`,
+					timeout: 3000,
+					background: 'bg-orange-500 text-white width-filled '
+				};
+			}
 		} catch (error) {
 			let mesage = `tag'${newTag}の作成に失敗しました`;
-			console.log(error);
-			if (error != null) {
-				mesage = error;
-			}
-			/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
-			const t = {
+
+			t = {
 				message: mesage,
 				timeout: 3000,
 				background: 'bg-orange-500 text-white width-filled '
 			};
-			toastStore.trigger(t);
 		}
+		//トースト起動
+		toastStore.trigger(t);
 		nowLoading = false;
 		editTagDialog.close();
 	}
@@ -507,6 +542,7 @@
 			background: 'bg-red-500 text-white width-filled '
 			//	'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white width-filled'
 		};
+		nowLoading = false;
 		toastStore.trigger(t);
 	}
 
@@ -514,6 +550,8 @@
 	 * @param {import("nostr-tools").Event} deleteEvent
 	 */
 	async function deleteTagEvent(deleteEvent) {
+		/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+		let t;
 		try {
 			nowLoading = true;
 			const isSuccess = await DereteTag(deleteEvent, pubkey, relays);
@@ -525,23 +563,28 @@
 				delete viewItem[thisTab];
 				tagList = tagList.filter((tag) => tag !== thisTab);
 				tabSet = tagList[0];
+
+				t = {
+					message: isSuccess.msg.join(' \n'),
+					timeout: 5000
+				};
 			} else {
 				console.log('削除失敗したかも');
+				t = {
+					message: `failed to delete tag`,
+					timeout: 3000,
+					background: 'bg-orange-500 text-white width-filled '
+				};
 			}
 		} catch (error) {
-			let mesage = `タグの削除に失敗したかも`;
-			if (error != null) {
-				mesage = error;
-			}
-			/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
-			const t = {
-				message: mesage,
+			t = {
+				message: `タグの削除に失敗したかも`,
 				timeout: 3000,
 				background: 'bg-orange-500 text-white width-filled '
 			};
-			nowLoading = false;
-			toastStore.trigger(t);
 		}
+		nowLoading = false;
+		toastStore.trigger(t);
 	}
 </script>
 
@@ -630,15 +673,17 @@
 {/await}
 
 <div class="footer-menu">
-	<button class="btn variant-soft-primary footer-btn  hover:bg-blue-700 rounded-full font-bold" on:click={openAddNoteDialog}
-		>add note</button
-	>
+	{#if !nowLoading}
+		<button
+			class="btn variant-soft-primary footer-btn hover:bg-blue-700 rounded-full font-bold"
+			on:click={openAddNoteDialog}>add note</button
+		>
 
-	<button class="btn variant-soft-primary hover:bg-blue-700 footer-btn rounded-full font-bold " on:click={openEditTagDialog}
-		>edit tag</button
-	>
-
-	{#if nowLoading}
+		<button
+			class="btn variant-soft-primary hover:bg-blue-700 footer-btn rounded-full font-bold"
+			on:click={openEditTagDialog}>edit tag</button
+		>
+	{:else}
 		<div class="progress">
 			<ProgressRadial ... stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
 		</div>
@@ -718,11 +763,11 @@
 	.footer-btn {
 		margin: 5px;
 	}
-	
+
 	.content {
 		white-space: pre-wrap;
 		max-height: 15em; /* 表示範囲の高さを指定 */
-  		overflow-y: scroll; /* 縦方向にスクロール可能にする */
+		overflow-y: scroll; /* 縦方向にスクロール可能にする */
 	}
 	.head-li {
 		word-wrap: break-word;
@@ -730,9 +775,9 @@
 	.list {
 		padding-left: 1em;
 	}
-	.panel{
+	.panel {
 		margin-top: -1em;
 		max-height: calc(100vh - 9em); /* 表示範囲の高さを指定 */
-  		overflow-y: scroll; /* 縦方向にスクロール可能にする */
+		overflow-y: scroll; /* 縦方向にスクロール可能にする */
 	}
 </style>

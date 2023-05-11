@@ -198,7 +198,7 @@ export async function getEvent(idList, RelaysforSeach) {
         }, 5000);
 
         sub.on('event', event => {
-           // console.log(event);
+            // console.log(event);
             // @ts-ignore
             eventList[event.id] = event;
             //    if (!pubkeys.includes(event.pubkey)) {
@@ -308,25 +308,33 @@ export async function addNoteEvent(noteID, _event, relays) {
         });
 
         event.id = getEventHash(event);
-
+        let msg = [];
+        let isSuccess = false;
         const pool = new SimplePool();
         const pub = pool.publish(relays, event);
 
         return new Promise((resolve) => {
             const timeoutID = setTimeout(() => {
-                resolve(null);
+                resolve({ isSuccess, event, msg });
             }, 5000);
 
-            pub.on("ok", () => {
-                console.log(`${relays.url} has accepted our event`);
-                clearTimeout(timeoutID);
-                resolve(event);
+            pub.on("ok", relay => {
+                isSuccess = true;
+                msg.push(`[ok]${relay}`);
+
+                if (msg.length == relays.length) {
+                    clearTimeout(timeoutID);
+                    resolve({ isSuccess, event, msg });
+                }
             });
 
-            pub.on("failed", (reason) => {
-                console.log(`failed to publish to: ${reason}`);
-                clearTimeout(timeoutID);
-                resolve(null);
+            pub.on("failed", relay => {
+                msg.push(`[failed]${relay}`);
+
+                if (msg.length == relays.length) {
+                    clearTimeout(timeoutID);
+                    resolve({ isSuccess, event, msg });
+                }
             });
         });
     } catch (error) {
@@ -414,24 +422,31 @@ export async function removeEvent(hexid, _event, relays) {
         event.id = getEventHash(event);
         const pool = new SimplePool();
         let pub = pool.publish(relays, event);
+
+        let isSuccess = false;
+        let msg = [];
         return new Promise((resolve) => {
             const timeoutID = setTimeout(() => {
-                resolve(null);
+                resolve({ isSuccess, event, msg });
             }, 5000);
 
-            pub.on("ok", () => {
-                console.log(`${relays.url} has accepted our event`);
-                clearTimeout(timeoutID);
-                resolve(event);
+            pub.on("ok", relay => {
+                isSuccess = true;
+                msg.push(`[ok]${relay}`);
+                if (msg.length == relays.length) {
+                    clearTimeout(timeoutID);
+                    resolve({ isSuccess, event, msg });
+                }
 
             });
 
             // @ts-ignore
-            pub.on("failed", (reason) => {
-                console.log(`failed to publish to: ${reason}`);
-                clearTimeout(timeoutID);
-                resolve(null);
-
+            pub.on("failed", relay => {
+                msg.push(`[failed]${relay}`);
+                if (msg.length == relays.length) {
+                    clearTimeout(timeoutID);
+                    resolve({ isSuccess, event, msg });
+                }
             });
         });
     } catch (error) {
@@ -459,17 +474,32 @@ export async function createNewTag(tagName, pubkey, relays) {
         event.id = getEventHash(event);
         const pool = new SimplePool();
         let pub = pool.publish(relays, event);
-        pub.on("ok", () => {
-            console.log(`${relays.url} has accepted our event`);
-        });
-        // @ts-ignore
-        pub.on("failed", (reason) => {
-            console.log(
-                `failed to publish to: ${reason}`
-            );
-        });
 
-        return event;
+        let isSuccess = false;
+        let msg = [];
+        return new Promise((resolve) => {
+            const timeoutID = setTimeout(() => {
+                resolve({ isSuccess, event, msg });
+            }, 5000);
+
+            pub.on("ok", relay => {
+                isSuccess = true;
+                msg.push(`[ok]${relay}`);
+                if (msg.length == relays.length) {
+                    clearTimeout(timeoutID);
+                    resolve({ isSuccess, event, msg });
+                }
+            });
+            // @ts-ignore
+            pub.on("failed", relay => {
+                msg.push(`[faled]${relay}`);
+                if (msg.length == relays.length) {
+                    clearTimeout(timeoutID);
+                    resolve({ isSuccess, event, msg });
+                }
+            });
+
+        });
     } catch (error) {
         throw new Error('拡張機能が読み込めませんでした');
     }
@@ -503,15 +533,30 @@ export async function DereteTag(_event, pubkey, relays) {
         });
         event.id = getEventHash(event);
         const pool = new SimplePool();
-        return new Promise((resolve, reject) => {
-            const pub = pool.publish(relays, event);
-            pub.on("ok", () => {
-                console.log(`${relays.url} has accepted our event`);
-                resolve(true);
+        const pub = pool.publish(relays, event);
+
+        let isSuccess = false;
+        let msg = [];
+        return new Promise((resolve) => {
+            const timeoutID = setTimeout(() => {
+                resolve({ isSuccess, event, msg });
+            }, 5000);
+
+            pub.on("ok", relay => {
+                isSuccess = true;
+                msg.push(`[ok]${relay}`);
+                if (msg.length == relays.length) {
+                    clearTimeout(timeoutID);
+                    resolve({ isSuccess, event, msg });
+                }
             });
-            pub.on("failed", (reason) => {
-                console.log(`failed to publish to: ${reason}`);
-                resolve(false);
+            // @ts-ignore
+            pub.on("failed", relay => {
+                msg.push(`[failed]${relay}`);
+                if (msg.length == relays.length) {
+                    clearTimeout(timeoutID);
+                    resolve({ isSuccess, event, msg });
+                }
             });
         });
     } catch { throw new Error('拡張機能が読み込めませんでした'); }
@@ -541,6 +586,11 @@ export function formatPubkeyList(eventList) {
 }
 
 
+/**
+ * @param {import("nostr-tools").Event} _event
+ * @param {string[]} relays
+ * @param {import("nostr-tools").Filter[] | { kinds: number[]; authors: string[]; '#d': string[]; }[]} filter
+ */
 async function reloadEvent(_event, relays, filter) {
 
     const pool = new SimplePool();
