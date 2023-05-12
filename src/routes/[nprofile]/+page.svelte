@@ -377,7 +377,6 @@
 		/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 		let t;
 		try {
-			
 			const hexId = noteToHex(_item.detail);
 			const thisEvent = event30001[tagList.indexOf(_tabSet)];
 			console.log(thisEvent);
@@ -661,7 +660,7 @@
 	}
 
 	async function deletedNotes(ids) {
-		nowLoading=true;
+		nowLoading = true;
 		await deleteNote(ids);
 		const seleList = selectedList;
 		for (let i = 0; i < seleList.length; i++) {
@@ -674,7 +673,7 @@
 		}
 		viewItem = viewItem;
 		selectedList = [];
-		nowLoading=false;
+		nowLoading = false;
 	}
 
 	/**
@@ -734,7 +733,7 @@
 		}
 	}
 	async function moveSelectedNotes(str) {
-		nowLoading=true;
+		nowLoading = true;
 		console.log(`${tabSet} から　${str}`);
 		//selectedにはいってるやつを今のタグtabSetから写し先strへ
 		const ids = selectedList.map(([x, y]) => viewItem[x][y].id);
@@ -749,12 +748,16 @@
 			timeout: 5000
 		};
 		const seleList = selectedList;
-		const selectedItems = selectedList.map(([x, y]) => {
-			viewItem[x][y].isChecked = false;
-			return viewItem[x][y];
-		});
+		const selectedItems = [
+			...new Set(
+				selectedList.map(([x, y]) => {
+					viewItem[x][y].isChecked = false;
+					return viewItem[x][y];
+				})
+			)
+		];
 
-		viewItem[str].splice(viewItem[str].length, 0, ...selectedItems);
+		viewItem[str].push(...selectedItems);
 		viewItem = viewItem;
 		await deleteNote(ids);
 
@@ -769,7 +772,7 @@
 		}
 		viewItem = viewItem;
 		selectedList = [];
-		nowLoading=false;
+		nowLoading = false;
 	}
 
 	function openTagListDialog() {
