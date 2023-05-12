@@ -118,7 +118,7 @@ export function pubToHex(pubkey) {
 export function noteToHex(noteId) {
     let noteHex = noteId;
     console.log(noteHex);
-    console.log(nip19.decode(noteId))
+  
     //console.log(noteId.slice(0, 4))
     if (noteId.slice(0, 4) == "note") {
         //console.log(noteId.slice(0, 4))

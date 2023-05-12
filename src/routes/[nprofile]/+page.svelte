@@ -36,12 +36,12 @@
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		'wss://relay.nostr.band',
-		'wss://nostr.wine',
-		'wss://universe.nostrich.land',
-		'wss://relay.damus.io'
-		//'wss://nostream.localtest.me',
-		//'ws://localhost:7000'
+		//'wss://relay.nostr.band',
+		//'wss://nostr.wine',
+		//'wss://universe.nostrich.land',
+		//'wss://relay.damus.io'
+		'wss://nostream.localtest.me',
+		'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
@@ -303,6 +303,7 @@
 				viewItem[tabSet][nowViewIndex].isMenuOpen = false;
 				break;
 		}
+		viewItem[tabSet][nowViewIndex].isMenuOpen = false;
 	}
 
 	//$:console.log(nowTag);
@@ -358,14 +359,16 @@
 
 	/**
 	 * @param {any} _item
+	 * @param {string} _tabSet
 	 */
-	async function addNote(_item) {
+	async function addNote(_item,_tabSet) {
+		let result=false;
 		/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 		let t;
 		try {
 			nowLoading = true;
 			const hexId = noteToHex(_item.detail);
-			const thisEvent = event30001[tagList.indexOf(tabSet)];
+			const thisEvent=event30001[tagList.indexOf(_tabSet)];
 			console.log(thisEvent);
 
 			const responseEvent = await addNoteEvent(hexId, thisEvent, relays);
@@ -373,7 +376,7 @@
 			if (!responseEvent.isSuccess) {
 				throw new Error(`Fail to add note id:${_item.detail}`);
 			}
-			event30001[tagList.indexOf(tabSet)] = responseEvent.event;
+			event30001[tagList.indexOf(_tabSet)] = responseEvent.event;
 			t = {
 				message: responseEvent.msg.join("\n"),
 				timeout: 5000
@@ -427,8 +430,9 @@
 				item.icon = thisProfile.picture;
 			}
 
-			viewItem[tabSet].push(item);
+			viewItem[_tabSet].push(item);
 			viewItem = viewItem;
+			result=true;
 		} catch (error) {
 			console.log(error);
 			let errortext = `Fail to add note id:${_item.detail}`;
@@ -445,6 +449,8 @@
 			nowLoading = false;
 			closeAddNoteDialog();
 		}
+
+		return result;
 	}
 	//----------------------------EditNoteDialog
 	function openEditTagDialog() {
@@ -590,6 +596,25 @@
 		nowLoading = false;
 		toastStore.trigger(t);
 	}
+
+	/**
+	 * @param {{ detail: string; }} item
+	 */
+	async function handleMoveClick(item){
+		console.log(item.detail);
+		const id=viewItem[tabSet][nowViewIndex].id;
+		
+		const _item={detail:id}
+		console.log(event30001[tagList.indexOf(item.detail)]);
+		const result =await addNote(_item,item.detail);
+		//addNoteが成功したら削除する
+		if(result){
+		deleteNote(viewItem[tabSet][nowViewIndex].id);
+		}
+	}
+
+
+
 </script>
 
 <Toast />
@@ -655,7 +680,12 @@
 									>
 
 									{#if note.isMenuOpen}
-										<PopupMenu on:item-click={handleItemClick} />
+										<PopupMenu 
+										on:item-click={handleItemClick} 
+										on:move-click={handleMoveClick}
+										bind:tagList
+										bind:tabSet
+										/>
 									{/if}
 								</svelte:fragment>
 
@@ -697,7 +727,7 @@
 <AddNoteDialog
 	bind:dialog
 	on:closeAddNoteDialog={closeAddNoteDialog}
-	on:add={addNote}
+	on:add={_item=>{addNote(_item,tabSet)}}
 	bind:nowLoading
 	bind:dialogMessage
 	bind:tabSet
