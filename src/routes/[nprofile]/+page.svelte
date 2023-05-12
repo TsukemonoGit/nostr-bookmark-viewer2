@@ -660,6 +660,7 @@
 	}
 
 	async function deletedNotes(ids) {
+		nowLoading=true;
 		await deleteNote(ids);
 		const seleList = selectedList;
 		for (let i = 0; i < seleList.length; i++) {
@@ -672,6 +673,7 @@
 		}
 		viewItem = viewItem;
 		selectedList = [];
+		nowLoading=false;
 	}
 
 	/**
@@ -731,6 +733,7 @@
 		}
 	}
 	async function moveSelectedNotes(str) {
+		nowLoading=true;
 		console.log(`${tabSet} から　${str}`);
 		//selectedにはいってるやつを今のタグtabSetから写し先strへ
 		const ids = selectedList.map(([x, y]) => viewItem[x][y].id);
@@ -765,6 +768,7 @@
 		}
 		viewItem = viewItem;
 		selectedList = [];
+		nowLoading=false;
 	}
 
 	function openTagListDialog() {
