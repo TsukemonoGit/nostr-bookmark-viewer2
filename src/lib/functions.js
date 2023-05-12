@@ -118,7 +118,7 @@ export function pubToHex(pubkey) {
 export function noteToHex(noteId) {
     let noteHex = noteId;
     console.log(noteHex);
-  
+
     //console.log(noteId.slice(0, 4))
     if (noteId.slice(0, 4) == "note") {
         //console.log(noteId.slice(0, 4))
@@ -274,7 +274,7 @@ export async function getProfile(pubkeyList, RelaysforSeach) {
 
 //ブクマに追加
 /**
- * @param {any} noteID
+ * @param {string|string[]} noteID
  * @param {import("nostr-tools").Event} _event
  * @param {any} relays
  * @return 成功したら送ったeventを返すよ
@@ -295,9 +295,12 @@ export async function addNoteEvent(noteID, _event, relays) {
     const thisEve = await reloadEvent(_event, relays, filter);
 
     //----------------------------------------------------
-
-    thisEve.tags.push(['e', noteID]);
-
+    if (typeof noteID == 'string') {
+        thisEve.tags.push(['e', noteID]);
+    } else {
+        const newTags = noteID.map((id) => ['e', id]);
+        thisEve.tags.push(...newTags);
+    }
     try {
         const event = await window.nostr.signEvent({
             content: thisEve.content,
@@ -383,7 +386,7 @@ export async function getSingleEvent(noteHexId, RelaysforSeach) {
 
 
 /**
- * @param {string} hexid
+ * @param {string|string[]} hexid
  * @param {import("nostr-tools").Event} _event
  * @param {any} relays
  * @return 成功したら送ったeventを返すよ
@@ -407,9 +410,13 @@ export async function removeEvent(hexid, _event, relays) {
     const thisEve = await reloadEvent(_event, relays, filter);
 
     //----------------------------------------------------
-
-    tags = tags.filter(tags => tags[1] !== hexid);
-
+    if (typeof hexid == 'string') {
+        tags = tags.filter(tags => tags[1] !== hexid);
+    } else {
+        hexid.forEach(id => {
+            tags = tags.filter(tags => tags[1] !== id);
+        });
+    }
     try {
         // @ts-ignore
         const event = await window.nostr.signEvent({

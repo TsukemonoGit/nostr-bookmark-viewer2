@@ -21,6 +21,7 @@
 		ListBox,
 		ListBoxItem,
 		ProgressRadial,
+		SlideToggle,
 		Tab,
 		TabGroup,
 		Toast,
@@ -36,12 +37,12 @@
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		'wss://relay.nostr.band',
-		'wss://nostr.wine',
-		'wss://universe.nostrich.land',
-		'wss://relay.damus.io'
-		//'wss://nostream.localtest.me',
-		//'ws://localhost:7000'
+		//'wss://relay.nostr.band',
+		//'wss://nostr.wine',
+		//'wss://universe.nostrich.land',
+		//'wss://relay.damus.io'
+		'wss://nostream.localtest.me',
+		'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
@@ -50,7 +51,7 @@
 	/**@type {string[]}*/
 	let relays;
 
-	/**@type {{[key:string]:{id:string;noteId:string;isMenuOpen:boolean;date:string;name:string;icon:string;display_name:string;content:string}[]} | undefined} */
+	/**@type {{[key:string]:{id:string;noteId:string;isMenuOpen:boolean;date:string;name:string;icon:string;display_name:string;content:string; isChecked:boolean}[]} | undefined} */
 	let viewItem = {};
 
 	/**@type {string }*/
@@ -169,6 +170,7 @@
 			toastStore.trigger(t);
 			return;
 		}
+
 		nowLoading = false;
 	});
 
@@ -194,7 +196,8 @@
 						name: 'undefined',
 						display_name: 'undefined',
 						icon: 'undefined',
-						isMenuOpen: false //メニューの開閉状態
+						isMenuOpen: false, //メニューの開閉状態
+						isChecked: false
 					};
 
 					try {
@@ -308,6 +311,9 @@
 
 	//$:console.log(nowTag);
 
+	/**
+	 * @param {string | string[]} hexId
+	 */
 	async function deleteNote(hexId) {
 		/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 		let t;
@@ -325,13 +331,13 @@
 			};
 		} else {
 			t = {
-				message: responseEvent.msg.join("\n"),
-				timeout: 5000,
+				message: responseEvent.msg.join('\n'),
+				timeout: 5000
 			};
 
 			event30001[tagList.indexOf(tabSet)] = responseEvent.event;
 			// viewItemから指定した要素を削除
-			if (viewItem && viewItem[tabSet]) {
+			if (viewItem && viewItem[tabSet] && typeof hexId == 'string') {
 				viewItem[tabSet].splice(nowViewIndex, 1);
 			}
 		}
@@ -361,14 +367,14 @@
 	 * @param {any} _item
 	 * @param {string} _tabSet
 	 */
-	async function addNote(_item,_tabSet) {
-		let result=false;
+	async function addNote(_item, _tabSet) {
+		let result = false;
 		/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 		let t;
 		try {
 			nowLoading = true;
 			const hexId = noteToHex(_item.detail);
-			const thisEvent=event30001[tagList.indexOf(_tabSet)];
+			const thisEvent = event30001[tagList.indexOf(_tabSet)];
 			console.log(thisEvent);
 
 			const responseEvent = await addNoteEvent(hexId, thisEvent, relays);
@@ -378,7 +384,7 @@
 			}
 			event30001[tagList.indexOf(_tabSet)] = responseEvent.event;
 			t = {
-				message: responseEvent.msg.join("\n"),
+				message: responseEvent.msg.join('\n'),
 				timeout: 5000
 			};
 
@@ -386,12 +392,12 @@
 				thisProf = null;
 			const tmpthisNote = await getEvent([hexId], RelaysforSeach);
 			console.log(tmpthisNote);
-			if (tmpthisNote!=null && tmpthisNote[hexId]!=null) {
+			if (tmpthisNote != null && tmpthisNote[hexId] != null) {
 				thisNote = tmpthisNote[hexId];
 				const thisPubkey = thisNote.pubkey;
 				console.log(thisPubkey);
 				let localProf = JSON.parse(localStorage.getItem('profile') || '{}');
-				if (localProf[thisPubkey] == null || localProf[thisPubkey]=="") {
+				if (localProf[thisPubkey] == null || localProf[thisPubkey] == '') {
 					const returnProf = await getProfile([thisPubkey], RelaysforSeach);
 					console.log(returnProf);
 					if (returnProf && returnProf[thisPubkey] !== '') {
@@ -413,7 +419,8 @@
 				name: 'undefined',
 				display_name: 'undefined',
 				icon: 'undefined',
-				isMenuOpen: false //メニューの開閉状態
+				isMenuOpen: false, //メニューの開閉状態
+				isChecked: false
 			};
 			if (thisNote && thisNote.content !== undefined && thisNote.content.trim() !== '') {
 				item.content = thisNote.content;
@@ -432,7 +439,7 @@
 
 			viewItem[_tabSet].push(item);
 			viewItem = viewItem;
-			result=true;
+			result = true;
 		} catch (error) {
 			console.log(error);
 			let errortext = `Fail to add note id:${_item.detail}`;
@@ -600,21 +607,96 @@
 	/**
 	 * @param {{ detail: string; }} item
 	 */
-	async function handleMoveClick(item){
+	async function handleMoveClick(item) {
 		console.log(item.detail);
-		const id=viewItem[tabSet][nowViewIndex].id;
-		
-		const _item={detail:id}
+		const id = viewItem[tabSet][nowViewIndex].id;
+
+		const _item = { detail: id };
 		console.log(event30001[tagList.indexOf(item.detail)]);
-		const result =await addNote(_item,item.detail);
+		const result = await addNote(_item, item.detail);
 		//addNoteが成功したら削除する
-		if(result){
-		deleteNote(viewItem[tabSet][nowViewIndex].id);
+		if (result) {
+			deleteNote(viewItem[tabSet][nowViewIndex].id);
 		}
 	}
 
+	let isMulti = false;
+	function nClickMultiMode(event) {
+		console.log(event);
+		onClickTab();
+		// ここに何かしらの処理を記述する
+	}
+	/**
+	 * @type {any[][]}
+	 */
+	let selectedList = [];
+	function clickMoveNotes() {
+		console.log(selectedList);
+		const ids = selectedList.map(([x, y]) => viewItem[x][y].id);
+	}
+	async function clickDeleteNotes() {
+		const ids = selectedList.map(([x, y]) => viewItem[x][y].id);
 
+		/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+		const t = await {
+			message: `delete ${selectedList.length} notes `,
+			action: {
+				label: 'DELETE',
+				response: () => deletedNotes(ids)
+			},
+			timeout: 10000,
+			background: 'bg-red-500 text-white width-filled  rounded-container-token',
+			buttonAction: 'btn variant-filled rounded-full'
+		};
+		toastStore.trigger(t);
 
+		console.log(selectedList);
+	}
+
+	async function deletedNotes(ids) {
+		await deleteNote(ids);
+		const seleList = selectedList;
+		for (let i = 0; i < seleList.length; i++) {
+			const [x, y] = seleList[i];
+			viewItem[x].splice(y, 1);
+		}
+		viewItem = viewItem;
+		selectedList = [];
+	}
+
+	/**
+	 * @param {string} _tabSet
+	 * @param {number} _ind
+	 */
+	function onCleckBoxChange(_tabSet, _ind) {
+		console.log(viewItem[tabSet][_ind]);
+		if (viewItem[tabSet][_ind].isChecked) {
+			selectedList.push([tabSet, _ind]);
+		} else {
+			selectedList.slice(selectedList.indexOf([tabSet, _ind]));
+		}
+	}
+
+	function onClickTab() {
+		//tabが新しくなったらチェックボックスを全部からにする。
+		//selectedListはからにする（全部ふぉるすにするから消しておけ）
+		console.log(selectedList); // = [];	//前のタグのセレクト情報をリセット
+		//今のタグの選択状況をリセット
+
+		ClearSelectList();
+	}
+	function ClearSelectList() {
+		for (const [x, y] of selectedList) {
+			viewItem[x][y].isChecked = false;
+		}
+		selectedList = [];
+		// for(let i = 0 ; i < selectedList.length;i++){
+		// 	viewItem[selectedList[i][0]][selectedList[i][1]].isChecked=false;
+		// }
+		// viewItem[tabSet].forEach((item) => {
+		// 	item.isChecked = false;
+		// });
+	}
 </script>
 
 <Toast />
@@ -644,7 +726,14 @@
 {:then book}
 	<TabGroup>
 		{#each tagList as tag}
-			<Tab bind:group={tabSet} name={tag} value={tag}>
+			<Tab
+				on:change={() => {
+					onClickTab(tabSet);
+				}}
+				bind:group={tabSet}
+				name={tag}
+				value={tag}
+			>
 				{tag}
 			</Tab>
 		{/each}
@@ -673,18 +762,28 @@
 								</svelte:fragment>
 
 								<svelte:fragment slot="sidebarRight">
-									<button
-										on:click={() => onClickMenu(note)}
-										class="btn-icon btn-icon-sm variant-filled-primary rounded-full"
-										style="position:relative">▼</button
-									>
-
+									{#if !isMulti}
+										<button
+											on:click={() => onClickMenu(note)}
+											class="btn-icon btn-icon-sm variant-filled-primary rounded-full"
+											style="position:relative">▼</button
+										>
+									{:else}
+										<input
+											class="checkbox"
+											type="checkbox"
+											bind:checked={note.isChecked}
+											on:change={() => {
+												onCleckBoxChange(tabSet, ind);
+											}}
+										/>
+									{/if}
 									{#if note.isMenuOpen}
-										<PopupMenu 
-										on:item-click={handleItemClick} 
-										on:move-click={handleMoveClick}
-										bind:tagList
-										bind:tabSet
+										<PopupMenu
+											on:item-click={handleItemClick}
+											on:move-click={handleMoveClick}
+											bind:tagList
+											bind:tabSet
 										/>
 									{/if}
 								</svelte:fragment>
@@ -706,17 +805,42 @@
 	</TabGroup>
 {/await}
 
+{#if !nowLoading}
+	<div class="header-menu">
+		<p>switch mode</p>
+		<SlideToggle
+			active="variant-ghost-primary"
+			name="toggle"
+			bind:checked={isMulti}
+			on:change={() => {
+				nClickMultiMode(isMulti);
+			}}
+		/>
+	</div>
+{/if}
+
 <div class="footer-menu">
 	{#if !nowLoading}
-		<button
-			class="btn variant-soft-primary footer-btn hover:bg-blue-700 rounded-full font-bold"
-			on:click={openAddNoteDialog}>add note</button
-		>
+		{#if !isMulti}
+			<button
+				class="btn variant-soft-primary footer-btn hover:bg-blue-700 rounded-full font-bold"
+				on:click={openAddNoteDialog}>add note</button
+			>
 
-		<button
-			class="btn variant-soft-primary hover:bg-blue-700 footer-btn rounded-full font-bold"
-			on:click={openEditTagDialog}>edit tag</button
-		>
+			<button
+				class="btn variant-soft-primary hover:bg-blue-700 footer-btn rounded-full font-bold"
+				on:click={openEditTagDialog}>edit tag</button
+			>
+		{:else}
+			<button
+				class="btn variant-soft-secondary footer-btn hover:bg-blue-700 rounded-full font-bold"
+				on:click={clickMoveNotes}>move selected notes</button
+			>
+			<button
+				class="btn variant-soft-warning hover:bg-orange-700 footer-btn rounded-full font-bold"
+				on:click={clickDeleteNotes}>delete selected notes</button
+			>
+		{/if}
 	{:else}
 		<div class="progress">
 			<ProgressRadial ... stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
@@ -727,7 +851,9 @@
 <AddNoteDialog
 	bind:dialog
 	on:closeAddNoteDialog={closeAddNoteDialog}
-	on:add={_item=>{addNote(_item,tabSet)}}
+	on:add={(_item) => {
+		addNote(_item, tabSet);
+	}}
 	bind:nowLoading
 	bind:dialogMessage
 	bind:tabSet
@@ -788,6 +914,18 @@
 		width: 100%;
 		left: 15px;
 		bottom: 10px;
+		z-index: 100;
+	}
+	.header-menu {
+		border: solid 1px rgb(88, 88, 88);
+		border-radius: 0.5em;
+		padding: 0.4em;
+		background-color: rgba(47, 52, 68, 0.822);
+		display: block;
+		position: fixed;
+		text-align: center;
+		right: 10px;
+		top: 10px;
 		z-index: 100;
 	}
 	.progress {
