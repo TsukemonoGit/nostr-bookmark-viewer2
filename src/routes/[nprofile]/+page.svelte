@@ -372,11 +372,12 @@
 	 * @param {string} _tabSet
 	 */
 	async function addNote(_item, _tabSet) {
+		nowLoading = true;
 		let result = false;
 		/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 		let t;
 		try {
-			nowLoading = true;
+			
 			const hexId = noteToHex(_item.detail);
 			const thisEvent = event30001[tagList.indexOf(_tabSet)];
 			console.log(thisEvent);
