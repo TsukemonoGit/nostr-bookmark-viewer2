@@ -34,15 +34,16 @@
 	import { add_classes, each } from 'svelte/internal';
 	import EditTagDialog from '../EditTagDialog.svelte';
 	import Content from '../Content.svelte';
+	import TagListDialog from '../TagListDialog.svelte';
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		//'wss://relay.nostr.band',
-		//'wss://nostr.wine',
-		//'wss://universe.nostrich.land',
-		//'wss://relay.damus.io'
-		'wss://nostream.localtest.me',
-		'ws://localhost:7000'
+		'wss://relay.nostr.band',
+		'wss://nostr.wine',
+		'wss://universe.nostrich.land',
+		'wss://relay.damus.io'
+		//'wss://nostream.localtest.me',
+		//'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
@@ -74,6 +75,9 @@
 	//タイアログ表示--------------------EditTag
 	/**@type {AddNoteDialog.dialog}*/
 	let editTagDialog;
+	//tagListタイアログ表示--------------------TagListDialog
+
+	let isTagListDialog = false;
 
 	//コンポーネントが最初に DOM にレンダリングされた後に実行されます(?)
 	onMount(async () => {
@@ -630,7 +634,9 @@
 	 * @type {any[][]}
 	 */
 	let selectedList = [];
+
 	function clickMoveNotes() {
+		//移動先を指定する
 		console.log(selectedList);
 		const ids = selectedList.map(([x, y]) => viewItem[x][y].id);
 	}
@@ -658,7 +664,11 @@
 		const seleList = selectedList;
 		for (let i = 0; i < seleList.length; i++) {
 			const [x, y] = seleList[i];
-			viewItem[x].splice(y, 1);
+			if (viewItem[x].length == 1) {
+				viewItem[x] = [];
+			} else {
+				viewItem[x].splice(y, 1);
+			}
 		}
 		viewItem = viewItem;
 		selectedList = [];
@@ -696,6 +706,69 @@
 		// viewItem[tabSet].forEach((item) => {
 		// 	item.isChecked = false;
 		// });
+	}
+
+	async function handleTagClick(_item) {
+		console.log(_item.detail.name);
+		const str = _item.detail.name;
+		if (str == 'close') {
+			isTagListDialog = false;
+		} else {
+			isTagListDialog = false;
+			/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
+			const t = await {
+				message: `from [${tabSet}] to [${str}] [${selectedList.length}]notes`,
+				action: {
+					label: 'MOVE',
+					response: () => moveSelectedNotes(str)
+				},
+				timeout: 10000,
+				background: 'bg-red-500 text-white width-filled '
+				//	'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white width-filled'
+			};
+			nowLoading = false;
+			toastStore.trigger(t);
+		}
+	}
+	async function moveSelectedNotes(str) {
+		console.log(`${tabSet} から　${str}`);
+		//selectedにはいってるやつを今のタグtabSetから写し先strへ
+		const ids = selectedList.map(([x, y]) => viewItem[x][y].id);
+
+		const responseEvent = await addNoteEvent(ids, event30001[tagList.indexOf(str)], relays);
+		if (!responseEvent.isSuccess) {
+			throw new Error(`Fail to add note id:${str}`);
+		}
+		event30001[tagList.indexOf(str)] = responseEvent.event;
+		const t = {
+			message: responseEvent.msg.join('\n'),
+			timeout: 5000
+		};
+		const seleList = selectedList;
+		const selectedItems = selectedList.map(([x, y]) => {
+			viewItem[x][y].isChecked = false;
+			return viewItem[x][y];
+		});
+
+		viewItem[str].splice(viewItem[str].length, 0, ...selectedItems);
+		viewItem = viewItem;
+		await deleteNote(ids);
+
+		//削除したのを削除
+		for (let i = 0; i < seleList.length; i++) {
+			const [x, y] = seleList[i];
+			if (viewItem[x].length == 1) {
+				viewItem[x] = [];
+			} else {
+				viewItem[x].splice(y, 1);
+			}
+		}
+		viewItem = viewItem;
+		selectedList = [];
+	}
+
+	function openTagListDialog() {
+		isTagListDialog = true;
 	}
 </script>
 
@@ -834,7 +907,7 @@
 		{:else}
 			<button
 				class="btn variant-soft-secondary footer-btn hover:bg-blue-700 rounded-full font-bold"
-				on:click={clickMoveNotes}>move selected notes</button
+				on:click={openTagListDialog}>move selected notes</button
 			>
 			<button
 				class="btn variant-soft-warning hover:bg-orange-700 footer-btn rounded-full font-bold"
@@ -847,7 +920,9 @@
 		</div>
 	{/if}
 </div>
-
+{#if isTagListDialog}
+	<TagListDialog on:tag-click={handleTagClick} bind:tagList bind:tabSet />
+{/if}
 <AddNoteDialog
 	bind:dialog
 	on:closeAddNoteDialog={closeAddNoteDialog}
