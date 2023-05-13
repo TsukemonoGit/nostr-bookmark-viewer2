@@ -663,13 +663,12 @@
 		nowLoading = true;
 		await deleteNote(ids);
 		const seleList = selectedList;
+		const tmpVI = viewItem;
+		//削除したのを削除
 		for (let i = 0; i < seleList.length; i++) {
 			const [x, y] = seleList[i];
-			if (viewItem[x].length == 1) {
-				viewItem[x] = [];
-			} else {
-				viewItem[x].splice(y, 1);
-			}
+			const index = viewItem[x].findIndex((value) => value === tmpVI[x][y]);
+			viewItem[x].splice(index, 1);
 		}
 		viewItem = viewItem;
 		selectedList = [];
@@ -761,14 +760,12 @@
 		viewItem = viewItem;
 		await deleteNote(ids);
 
+		const tmpVI = viewItem;
 		//削除したのを削除
 		for (let i = 0; i < seleList.length; i++) {
 			const [x, y] = seleList[i];
-			if (viewItem[x].length == 1) {
-				viewItem[x] = [];
-			} else {
-				viewItem[x].splice(y, 1);
-			}
+			const index = viewItem[x].findIndex((value) => value === tmpVI[x][y]);
+			viewItem[x].splice(index, 1);
 		}
 		viewItem = viewItem;
 		selectedList = [];
