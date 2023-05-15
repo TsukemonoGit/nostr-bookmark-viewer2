@@ -190,35 +190,51 @@ export async function getEvent(idList, RelaysforSeach) {
     filter[0].ids = idList;
 
     const pool = new SimplePool();
-    let sub = pool.sub(RelaysforSeach, filter);
-    const result = new Promise((resolve) => {
-
-        const timeoutID = setTimeout(() => {
-            resolve(eventList);//, pubkeys]);
-        }, 5000);
-
-        sub.on('event', event => {
-            // console.log(event);
-            // @ts-ignore
-            eventList[event.id] = event;
-            //    if (!pubkeys.includes(event.pubkey)) {
-            //      pubkeys.push(event.pubkey);
-            //}
-
-        });
-        sub.on("eose", () => {
-            sub.unsub(); //イベントの購読を停止
-            clearTimeout(timeoutID); //settimeoutのタイマーより早くeoseを受け取ったら、setTimeoutをキャンセルさせる。
-            resolve(eventList);//, pubkeys]);
-            clearTimeout(timeoutID);
-        });
-
+    let list = pool.list(RelaysforSeach, filter);
+    const result = list.then(event => {
+        event.forEach(item => eventList[item.id] = item);
+        console.log(event);
+        console.log(eventList);
+        return eventList; // ここでPromiseをresolveする
     });
-    //console.log(eventList);
-
-    await result;// result プロミスの解決を待つ
-    return result;
+    list.catch((reason)=>{
+        console.log(reason);
+    });
+    list.finally(()=>{
+        console.log("finally");
+    });
+    return result; // Promiseを返す
 }
+
+    // let sub = pool.sub(RelaysforSeach, filter);
+    // const result = new Promise((resolve) => {
+
+    //     const timeoutID = setTimeout(() => {
+    //         resolve(eventList);//, pubkeys]);
+    //     }, 5000);
+
+    //     sub.on('event', event => {
+    //         // console.log(event);
+    //         // @ts-ignore
+    //         eventList[event.id] = event;
+    //         //    if (!pubkeys.includes(event.pubkey)) {
+    //         //      pubkeys.push(event.pubkey);
+    //         //}
+
+    //     });
+    //     sub.on("eose", () => {
+    //         sub.unsub(); //イベントの購読を停止
+    //         clearTimeout(timeoutID); //settimeoutのタイマーより早くeoseを受け取ったら、setTimeoutをキャンセルさせる。
+    //         resolve(eventList);//, pubkeys]);
+    //         clearTimeout(timeoutID);
+    //     });
+
+    // });
+   // //console.log(eventList);
+
+ //   await result;// result プロミスの解決を待つ
+    //return result;
+//}
 
 
 /**
