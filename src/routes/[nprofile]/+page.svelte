@@ -135,10 +135,14 @@
 						getPubkeyList.splice(index, 1);
 					}
 				}
+				const index = getPubkeyList.indexOf(undefined);
+				if (index !== -1) {
+					getPubkeyList.splice(index, 1);
+				}
 			}
 			let profiles = {};
-
-			if (getPubkeyList != null && getPubkeyList.length > 0 && getPubkeyList[0] !== undefined) {
+console.log(getPubkeyList);
+			if (getPubkeyList.length > 0) {
 				profiles = await getProfile(getPubkeyList, RelaysforSeach); //key=pubkey,value=profile
 
 				localProfile = { ...localProfile, ...profiles };
@@ -580,7 +584,7 @@
 			if (isSuccess) {
 				//成功したらViewItemからけして　タブリストからも消す
 				const thisTab = deleteEvent.tags[0][1];
-				console.log(viewItem[thisTab]);
+				//console.log(viewItem[thisTab]);
 				delete viewItem[thisTab];
 				tagList = tagList.filter((tag) => tag !== thisTab);
 				tabSet = tagList[0];
@@ -608,6 +612,8 @@
 		toastStore.trigger(t);
 	}
 
+	//---------------------------------------以下複数選択モード関連
+	//複数ノートを削除ボタンをクリック
 	/**
 	 * @param {{ detail: string; }} item
 	 */
@@ -635,11 +641,7 @@
 	 */
 	let selectedList = [];
 
-	function clickMoveNotes() {
-		//移動先を指定する
-		console.log(selectedList);
-		const ids = selectedList.map(([x, y]) => viewItem[x][y].id);
-	}
+	//複数ノートを削除
 	async function clickDeleteNotes() {
 		const ids = selectedList.map(([x, y]) => viewItem[x][y].id);
 
@@ -656,7 +658,7 @@
 		};
 		toastStore.trigger(t);
 
-		console.log(selectedList);
+	//	console.log(selectedList);
 	}
 
 	async function deletedNotes(ids) {
@@ -688,7 +690,9 @@
 		}
 	}
 
+	//タグの切り替えを検知（複数選択のときしかいらないたぶん）
 	function onClickTab() {
+		if(!isMulti){return;}
 		//tabが新しくなったらチェックボックスを全部からにする。
 		//selectedListはからにする（全部ふぉるすにするから消しておけ）
 		console.log(selectedList); // = [];	//前のタグのセレクト情報をリセット
@@ -709,7 +713,9 @@
 		// });
 	}
 
+	//マルチ選択　選択中のノートを移動ボタンをクリック
 	async function handleTagClick(_item) {
+		
 		console.log(_item.detail.name);
 		const str = _item.detail.name;
 		if (str == 'close') {
@@ -731,6 +737,8 @@
 			toastStore.trigger(t);
 		}
 	}
+
+	//複数ノートを移動
 	async function moveSelectedNotes(str) {
 		nowLoading = true;
 		console.log(`${tabSet} から　${str}`);

@@ -161,12 +161,12 @@ export function formatBookmark(bookmark) {
 
 
 //イベント内容検索用リレーたち
-let RelaysforSeach = [
-    "wss://relay.nostr.band",
-    "wss://nostr.wine",
-    "wss://universe.nostrich.land",
-    "wss://relay.damus.io"
-];
+// let RelaysforSeach = [
+//     "wss://relay.nostr.band",
+//     "wss://nostr.wine",
+//     "wss://universe.nostrich.land",
+//     "wss://relay.damus.io"
+// ];
 
 /**
  * @param {string[]} idList
@@ -223,52 +223,32 @@ export async function getEvent(idList, RelaysforSeach) {
 
 /**
  * @param {string[]} pubkeyList
- * @return {Promise<{[key: string]: import("nostr-tools").Event|""}>} key:pubkeyごとのprofileEvent
  * @param {string[]} RelaysforSeach
+ * @return {Promise<{[key: string]: import("nostr-tools").Event | ""}>} key:pubkeyごとのprofileEvent
  */
 export async function getProfile(pubkeyList, RelaysforSeach) {
-    let profiles = pubkeyList.reduce((list, id) => {
-        // @ts-ignore
-        list[id] = "";
-        return list;
-    }, {});
+    const profiles = Object.fromEntries(pubkeyList.map(id => [id, ""]));
+    const filter = [{
+        authors: pubkeyList,
+        kinds: [0]
+    }];
 
-    let filter = [
-        {
-            authors: pubkeyList,
-            kinds: [0]
-        }];
     const pool = new SimplePool();
-    let sub = pool.sub(RelaysforSeach, filter);
+    const list = pool.list(RelaysforSeach, filter);
 
-    const result = new Promise((resolve) => {
-
-        const timeoutID = setTimeout(() => {
-            resolve(profiles);
-        }, 5000);
-
-        sub.on('event', event => {
-
-            // @ts-ignore
-            console.log(event.pubkey);
-            // @ts-ignore
-            profiles[event.pubkey] = event;
-        });
-
-        sub.on("eose", () => {
-            console.log("eose");
-            sub.unsub(); //イベントの購読を停止
-            clearTimeout(timeoutID); //settimeoutのタイマーより早くeoseを受け取ったら、setTimeoutをキャンセルさせる。
-            resolve(profiles);
-            clearTimeout(timeoutID);
-        });
-
+    const result = list.then(event => {
+        event.forEach(item => profiles[item.pubkey] = item);
+        console.log(event);
+        console.log(profiles);
+        return profiles; // ここでPromiseをresolveする
     });
-    //    console.log(eventList);
-
-    await result;// result プロミスの解決を待つ
-    console.log(profiles);
-    return profiles;
+    list.catch((reason)=>{
+        console.log(reason);
+    });
+    list.finally(()=>{
+        console.log("finally");
+    });
+    return result; // Promiseを返す
 }
 
 
