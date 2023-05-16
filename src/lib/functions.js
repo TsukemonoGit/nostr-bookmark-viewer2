@@ -150,14 +150,46 @@ export function formatBookmark(bookmark) {
     /**
      * @type {{[key:string]:string[]}}
      */
-    let fBookmark = {};
+    const fBookmark = {};
     for (let i = 0; i < bookmark.length; i++) {
-        const bookmarkObjs = bookmark[i].tags.slice(1).map((tag) => tag[1]);
+        if (bookmark[i].tags[0][0] !== "d") {
+            continue;
+        }
         const index = bookmark[i].tags[0][1];
-        fBookmark[index] = bookmarkObjs
+        fBookmark[index] = [];
+        const tagsLength = bookmark[i].tags.length;
+        bookmark[i].tags.forEach((tag) => {
+            if (tag[0] === "e") {
+                fBookmark[index].push(tag[1]);
+            }
+        });
     }
     return fBookmark;
 }
+//     /**
+//      * @type {{[key:string]:string[]}}
+//      */
+//     let fBookmark = {};
+//     for (let i = 0; i < bookmark.length; i++) {
+//         let index;
+//         if(bookmark[i].tags[0][0]=="d"){
+//         index = bookmark[i].tags[0][1];
+//         console.log(index);
+//         fBookmark[index]=[];
+//         }else{continue;}
+//         for (let j = 0; j < bookmark[i].tags.length; j++) {
+//             const thisList = bookmark[i].tags[j];
+//             console.log(thisList);
+//             if (thisList[0] == "e") {
+//                 fBookmark[index].push(thisList[1]);
+//             }
+//         }
+//         //const bookmarkObjs = bookmark[i].tags.slice(1).map((tag) => tag[1]);
+//         //const index = bookmark[i].tags[0][1];
+//         //fBookmark[index] = bookmarkObjs
+//     }
+//     return fBookmark;
+// }
 
 
 //イベント内容検索用リレーたち
@@ -188,7 +220,7 @@ export async function getEvent(idList, RelaysforSeach) {
     //console.log(eventList);
     //console.log(idList);
     filter[0].ids = idList;
-
+    console.log(filter);
     const pool = new SimplePool();
     let list = pool.list(RelaysforSeach, filter);
     const result = list.then(event => {
@@ -197,43 +229,43 @@ export async function getEvent(idList, RelaysforSeach) {
         console.log(eventList);
         return eventList; // ここでPromiseをresolveする
     });
-    list.catch((reason)=>{
+    list.catch((reason) => {
         console.log(reason);
     });
-    list.finally(()=>{
+    list.finally(() => {
         console.log("finally");
     });
     return result; // Promiseを返す
 }
 
-    // let sub = pool.sub(RelaysforSeach, filter);
-    // const result = new Promise((resolve) => {
+// let sub = pool.sub(RelaysforSeach, filter);
+// const result = new Promise((resolve) => {
 
-    //     const timeoutID = setTimeout(() => {
-    //         resolve(eventList);//, pubkeys]);
-    //     }, 5000);
+//     const timeoutID = setTimeout(() => {
+//         resolve(eventList);//, pubkeys]);
+//     }, 5000);
 
-    //     sub.on('event', event => {
-    //         // console.log(event);
-    //         // @ts-ignore
-    //         eventList[event.id] = event;
-    //         //    if (!pubkeys.includes(event.pubkey)) {
-    //         //      pubkeys.push(event.pubkey);
-    //         //}
+//     sub.on('event', event => {
+//         // console.log(event);
+//         // @ts-ignore
+//         eventList[event.id] = event;
+//         //    if (!pubkeys.includes(event.pubkey)) {
+//         //      pubkeys.push(event.pubkey);
+//         //}
 
-    //     });
-    //     sub.on("eose", () => {
-    //         sub.unsub(); //イベントの購読を停止
-    //         clearTimeout(timeoutID); //settimeoutのタイマーより早くeoseを受け取ったら、setTimeoutをキャンセルさせる。
-    //         resolve(eventList);//, pubkeys]);
-    //         clearTimeout(timeoutID);
-    //     });
+//     });
+//     sub.on("eose", () => {
+//         sub.unsub(); //イベントの購読を停止
+//         clearTimeout(timeoutID); //settimeoutのタイマーより早くeoseを受け取ったら、setTimeoutをキャンセルさせる。
+//         resolve(eventList);//, pubkeys]);
+//         clearTimeout(timeoutID);
+//     });
 
-    // });
-   // //console.log(eventList);
+// });
+// //console.log(eventList);
 
- //   await result;// result プロミスの解決を待つ
-    //return result;
+//   await result;// result プロミスの解決を待つ
+//return result;
 //}
 
 
@@ -258,10 +290,10 @@ export async function getProfile(pubkeyList, RelaysforSeach) {
         console.log(profiles);
         return profiles; // ここでPromiseをresolveする
     });
-    list.catch((reason)=>{
+    list.catch((reason) => {
         console.log(reason);
     });
-    list.finally(()=>{
+    list.finally(() => {
         console.log("finally");
     });
     return result; // Promiseを返す

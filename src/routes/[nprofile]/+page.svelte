@@ -52,7 +52,7 @@
 	/**@type {string[]}*/
 	let relays;
 
-	/**@type {{[key:string]:{id:string;noteId:string;isMenuOpen:boolean;date:string;name:string;icon:string;display_name:string;content:string; isChecked:boolean}[]} | undefined} */
+	/**@type {{[key:string]:{id:string;noteId:string;isMenuOpen:boolean;date:string;name:string;icon:string;display_name:string;content:string; isChecked:boolean; tags: string[][]}[]} | undefined} */
 	let viewItem = {};
 
 	/**@type {string }*/
@@ -91,7 +91,7 @@
 			//console.log(pubkey);
 			console.log(relays[0]);
 			event30001 = await getBookmarks(pubkey, relays); //30001イベント受信
-
+			console.log(event30001);
 			tagList = event30001.map((event) => event.tags[0][1]);
 			console.log(tagList[0]);
 			if (tagList.length > 0) {
@@ -199,6 +199,7 @@ console.log(getPubkeyList);
 						id: id,
 						noteId: nip19.noteEncode(id),
 						content: 'undefined',
+						tags:[],
 						date: 'unknown',
 						pubkey: 'unknown',
 						name: 'undefined',
@@ -212,6 +213,7 @@ console.log(getPubkeyList);
 						const note = noteList[id];
 						if (note.content != undefined) {
 							item.content = note.content;
+							item.tags=note.tags;
 						}
 						item.pubkey = nip19.npubEncode(note.pubkey);
 						item.date = new Date(note.created_at * 1000).toLocaleString();
@@ -422,6 +424,7 @@ console.log(getPubkeyList);
 				id: hexId,
 				noteId: nip19.noteEncode(hexId),
 				content: 'unknown',
+				tags:[],
 				date: 'unknown',
 				pubkey: 'unknown',
 				name: 'undefined',
@@ -432,6 +435,7 @@ console.log(getPubkeyList);
 			};
 			if (thisNote && thisNote.content !== undefined && thisNote.content.trim() !== '') {
 				item.content = thisNote.content;
+				item.tags=thisNote.tags;
 				item.date = new Date(thisNote.created_at * 1000).toLocaleString();
 				item.pubkey = thisNote.pubkey;
 			}
@@ -877,7 +881,7 @@ console.log(getPubkeyList);
 								<!-- Router Slot -->
 								<slot>
 									<div class="content">
-										<Content bind:note={note.content} />
+										<Content bind:note={note.content} bind:tag={note.tags}/>
 									</div>
 								</slot>
 
