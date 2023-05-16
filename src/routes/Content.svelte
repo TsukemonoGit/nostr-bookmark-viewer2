@@ -68,7 +68,7 @@
       const shortcode = match.slice(1, -1);
       const imageUrl = emojis.get(shortcode);
       if (imageUrl) {
-        return convertImageUrlToImage(imageUrl, `display: inline;max-height: 1em;`);
+        return convertImageUrlToImage(imageUrl, `display: inline;max-height: 1.5em;`);
       }
       return match;
     });
