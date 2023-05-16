@@ -62,7 +62,7 @@
     .join('');
 
   // emojisの要素がある場合にshortcodeをURL画像に置換
-  $: if (emojis.size > 0) {
+  $: if (convertedNote != undefined && emojis.size > 0) {
     const emojiRegex = /(:[^\s:]+:)/g;
     convertedNote = convertedNote.replace(emojiRegex, match => {
       const shortcode = match.slice(1, -1);
