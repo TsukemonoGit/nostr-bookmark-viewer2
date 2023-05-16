@@ -10,8 +10,10 @@
   // URL/Image判定の正規表現
   const urlRegex = /(https?:\/\/[^\s]+)/g;
 
+  let emojis=new Map();
   // 絵文字のマッピングを保持するMap
-  let emojis = new Map(
+  $:if(tags.length!=0){
+    emojis = new Map(
     tags
       .filter(([tagName, tagContent, url]) => tagName === 'emoji' && tagContent !== undefined && url !== undefined)
       .reduce((map, [, shortcode, url]) => {
@@ -19,7 +21,7 @@
         return map;
       }, new Map())
   );
-
+    }
   // URLをリンクに変換する関数
   function convertUrlToLink(url) {
     return `<a href="${url}" target="_blank">${url}</a>`;
@@ -43,7 +45,8 @@
   // noteを表示用に変換
   let convertedNote = note;
   
-  $:convertedNote = note
+  $:if(note.length!=0){
+  convertedNote = note
     .split(urlRegex)
     .map(part => {
       if (part.match(urlRegex)) {
@@ -60,10 +63,10 @@
       }
     })
     .join('');
-
-  // emojisの要素がある場合にshortcodeをURL画像に置換
-  $: if (convertedNote != undefined && emojis.size > 0) {
+  }
     const emojiRegex = /(:[^\s:]+:)/g;
+  // emojisの要素がある場合にshortcodeをURL画像に置換
+  $: if (convertedNote.length!=0 && emojis.size > 0) {
     convertedNote = convertedNote.replace(emojiRegex, match => {
       const shortcode = match.slice(1, -1);
       const imageUrl = emojis.get(shortcode);
