@@ -239,7 +239,7 @@ console.log(getPubkeyList);
 	}
 
 	/**
-	 * @param {{ id?: string; noteId?: string; isMenuOpen: any; date?: string; name?: string; icon?: string; display_name?: string; content?: string; }} note
+	 * @param {{ id?: string; noteId?: string; isMenuOpen: any; date?: string; name?: string; icon?: string; display_name?: string; content?: string; tags?:string[][]}} note
 	 */
 	function onClickMenu(note) {
 		console.log(note);
@@ -881,7 +881,7 @@ console.log(getPubkeyList);
 								<!-- Router Slot -->
 								<slot>
 									<div class="content">
-										<Content bind:note={note.content} bind:tag={note.tags}/>
+										<Content bind:note={note.content} bind:tags={note.tags}/>
 									</div>
 								</slot>
 

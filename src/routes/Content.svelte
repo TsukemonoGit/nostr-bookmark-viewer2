@@ -1,45 +1,89 @@
 <script>
-    export let note = '';
+  import { onMount } from "svelte";
+
+  export let note = '';
+  /**
+   * @type {string[][]}
+   */
+  export let tags = [];
+
+  // URL/Image判定の正規表現
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+  // 絵文字のマッピングを保持するMap
+  let emojis = new Map(
+    tags
+      .filter(([tagName, tagContent, url]) => tagName === 'emoji' && tagContent !== undefined && url !== undefined)
+      .reduce((map, [, shortcode, url]) => {
+        map.set(shortcode, url);
+        return map;
+      }, new Map())
+  );
+
+  // URLをリンクに変換する関数
+  function convertUrlToLink(url) {
+    return `<a href="${url}" target="_blank">${url}</a>`;
+  }
+
+  // 画像URLを画像に変換する関数
+  function convertImageUrlToImage(url, style) {
     
-    const regex = /(https?:\/\/[^\s]+)/g;
-    
-    async function getUrls(note) {
-      const urls = note?.match(regex) || [];
-      return urls;
+    return `<img src="${url}" alt="" style="${style}"/>`;
+  }
+
+  function getImageSrc(url) {
+    const ext = url.split('.').pop().toLowerCase();
+    if (ext === 'jpg' || ext === 'jpeg' || ext === 'png' || ext === 'gif') {
+      return url;
     }
-    
-    function getImageSrc(url) {
-      const ext = url.split('.').pop().toLowerCase();
-      if (ext === 'jpg' || ext === 'jpeg' || ext === 'png' || ext === 'gif') {
-        return url;
+    return '';
+  }
+
+
+  // noteを表示用に変換
+  let convertedNote = note;
+  
+  $:convertedNote = note
+    .split(urlRegex)
+    .map(part => {
+      if (part.match(urlRegex)) {
+        if (part.includes('http://') || part.includes('https://')) {
+          if (getImageSrc(part)) {
+            return convertImageUrlToImage(part,   `display: inline; max-height: 10em;`);
+          } else {
+            return convertUrlToLink(part);
+          }
+        }
+        return part;
+      } else {
+        return part;
       }
-      return '';
-    }
-  </script>
-  
-  {#await getUrls(note) then urls}
-    {#if note != undefined}
-      <div>
-        {#each note.split(regex) as part}
-          {#if urls.includes(part)}
-            <div class="imgs">
-              {#if getImageSrc(part)}
-                <a href={part} target="_blank"><img class="img" src={getImageSrc(part)} alt="" /></a>
-              {:else}
-                <a href={part} target="_blank">{part}</a>
-              {/if}
-            </div>
-          {:else}
-            {part}
-          {/if}
-        {/each}
-      </div>
-    {/if}
-  {:catch error}
-    <p>{error.message}</p>
-  {/await}
-  
-  <style>
+    })
+    .join('');
+
+  // emojisの要素がある場合にshortcodeをURL画像に置換
+  $: if (emojis.size > 0) {
+    const emojiRegex = /(:[^\s:]+:)/g;
+    convertedNote = convertedNote.replace(emojiRegex, match => {
+      const shortcode = match.slice(1, -1);
+      const imageUrl = emojis.get(shortcode);
+      if (imageUrl) {
+        return convertImageUrlToImage(imageUrl, `display: inline;max-height: 1em;`);
+      }
+      return match;
+    });
+  }
+</script>
+
+<main>
+  {#if convertedNote != undefined}
+    <div>{@html convertedNote}</div>
+  {/if}
+</main>
+
+
+
+  <!-- <style>
     .imgs {
       display: flex;
     }
@@ -48,4 +92,8 @@
       display: inline;
       max-height: 10em;
     }
-  </style>
+    .emoji{
+      display: inline;
+      max-height: 1em;
+    }
+  </style> -->
