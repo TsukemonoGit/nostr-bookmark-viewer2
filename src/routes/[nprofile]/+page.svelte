@@ -959,10 +959,14 @@ console.log(getPubkeyList);
 <style>
 	.icon-area {
 		margin-right: 1em;
-	}
-	.icon {
 		width: 50px;
 		height: 50px;
+		
+	}
+	.icon {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 		border-radius: 50%;
 	}
 	.note {
