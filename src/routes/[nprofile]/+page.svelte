@@ -1013,8 +1013,7 @@
 			</div>
 		{/if}
 	
-	
-		{#if viewItem != undefined && Object.keys(viewItem).length > 0 && viewItem[tabSet].length > 50}
+		{#if !nowLoading && viewItem != undefined && Object.keys(viewItem).length > 0 && viewItem[tabSet].length > 50}
 			<Paginator
 				settings={paging}
 				on:page={onPageChange}
