@@ -703,6 +703,7 @@
 	//タグの切り替えを検知（複数選択のときしかいらないたぶん）
 	function onClickTab() {
 		if (viewItem != undefined && Object.keys(viewItem).length > 0) {
+			panelElement.scroll({ top: 0, behavior: 'auto' });
 		paging = {
 	 		offset: 0,
 	 		limit: 20,
