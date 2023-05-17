@@ -39,12 +39,12 @@
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		'wss://relay.nostr.band',
-		'wss://nostr.wine',
-		'wss://universe.nostrich.land',
-		'wss://relay.damus.io'
-		//'wss://nostream.localtest.me',
-		//'ws://localhost:7000'
+		//'wss://relay.nostr.band',
+		//'wss://nostr.wine',
+		//'wss://universe.nostrich.land',
+		//'wss://relay.damus.io'
+		'wss://nostream.localtest.me',
+		'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
@@ -180,11 +180,11 @@
 			return;
 		}
 		paging = {
-	 		offset: 0,
-	 		limit: 20,
-	 		size: viewItem[tabSet].length,
-	 		amounts: [20,50,100]
-	 	};
+			offset: 0,
+			limit: 20,
+			size: viewItem[tabSet].length,
+			amounts: [20, 50, 100]
+		};
 		nowLoading = false;
 	});
 
@@ -704,13 +704,13 @@
 	function onClickTab() {
 		if (viewItem != undefined && Object.keys(viewItem).length > 0) {
 			panelElement.scroll({ top: 0, behavior: 'auto' });
-		paging = {
-	 		offset: 0,
-	 		limit: 20,
-	 		size: viewItem[tabSet].length,
-	 		amounts: [20,50,100]
-	 	};
-	}
+			paging = {
+				offset: 0,
+				limit: 50,
+				size: viewItem[tabSet].length,
+				amounts: [50, 100]
+			};
+		}
 
 		if (!isMulti) {
 			return;
@@ -805,15 +805,14 @@
 		isTagListDialog = true;
 	}
 
-
 	//--------------------------------------Pagenatorの設定この辺
 	// PaginatorSettings
 	/**@type {import('@skeletonlabs/skeleton/dist/components/Paginator/types').PaginationSettings}*/
 	let paging = {
 		offset: 0,
-		limit: 100,
+		limit: 50,
 		size: 0,
-		amounts: [20,50,100]
+		amounts: [50, 100]
 	};
 
 	/**
@@ -845,19 +844,19 @@
 			paging.offset * paging.limit + paging.limit // end
 		);
 		// スクロール位置を一番上に移動する
-		  // スクロール位置を一番上に設定
-		  panelElement.scroll({ top: 0, behavior: 'auto' });
+		// スクロール位置を一番上に設定
+		panelElement.scroll({ top: 0, behavior: 'auto' });
 
 		console.log('event:page', e.detail);
 	}
-	function onAmountChange(e){
+	function onAmountChange(e) {
 		console.log('event:page', e.detail);
 		paging = {
-		offset: 0,
-		limit: e.detail,
-		size: viewItem[tabSet].length,
-		amounts: [20,50,100]
-	};
+			offset: 0,
+			limit: e.detail,
+			size: viewItem[tabSet].length,
+			amounts: [50, 100]
+		};
 	}
 </script>
 
@@ -886,7 +885,7 @@
 {#await onMount}
 	<ProgressRadial ... stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
 {:then book}
-	<TabGroup>
+	<TabGroup justify="justify-center">
 		{#each tagList as tag}
 			<Tab
 				on:change={() => {
@@ -900,71 +899,69 @@
 			</Tab>
 		{/each}
 		<!-- Tab Panels --->
-		
+
 		<svelte:fragment slot="panel">
 			<div class="panel" bind:this={panelElement}>
 				{#if viewItem != undefined && Object.keys(viewItem).length > 0}
-				
-						{#each paginatedSource as note}
-							<div class="note">
-								<AppShell>
-									<svelte:fragment slot="sidebarLeft">
-										<div class="icon-area">
-											<img class="icon" src={note.icon} alt="icon" />
+					{#each paginatedSource as note}
+						<div class="note">
+							<AppShell>
+								<svelte:fragment slot="sidebarLeft">
+									<div class="icon-area">
+										<img class="icon" src={note.icon} alt="icon" />
+									</div>
+								</svelte:fragment>
+
+								<svelte:fragment slot="pageHeader">
+									<div class="header">
+										<div class="display_name">
+											{note.display_name}
 										</div>
-									</svelte:fragment>
+										<div class="name">@{note.name}</div>
+										<div class="date">{note.date}</div>
+									</div>
+								</svelte:fragment>
 
-									<svelte:fragment slot="pageHeader">
-										<div class="header">
-											<div class="display_name">
-												{note.display_name}
-											</div>
-											<div class="name">@{note.name}</div>
-											<div class="date">{note.date}</div>
-										</div>
-									</svelte:fragment>
+								<svelte:fragment slot="sidebarRight">
+									{#if !isMulti}
+										<button
+											on:click={() => onClickMenu(note)}
+											class="btn-icon btn-icon-sm variant-filled-primary rounded-full"
+											style="position:relative">▼</button
+										>
+									{:else}
+										<input
+											class="checkbox w-8 h-8"
+											type="checkbox"
+											bind:checked={note.isChecked}
+											on:change={() => {
+												onCleckBoxChange(tabSet, note);
+											}}
+										/>
+									{/if}
+									{#if note.isMenuOpen}
+										<PopupMenu
+											on:item-click={handleItemClick}
+											on:move-click={handleMoveClick}
+											bind:tagList
+											bind:tabSet
+										/>
+									{/if}
+								</svelte:fragment>
 
-									<svelte:fragment slot="sidebarRight">
-										{#if !isMulti}
-											<button
-												on:click={() => onClickMenu(note)}
-												class="btn-icon btn-icon-sm variant-filled-primary rounded-full"
-												style="position:relative">▼</button
-											>
-										{:else}
-											<input
-												class="checkbox"
-												type="checkbox"
-												bind:checked={note.isChecked}
-												on:change={() => {
-													onCleckBoxChange(tabSet, note);
-												}}
-											/>
-										{/if}
-										{#if note.isMenuOpen}
-											<PopupMenu
-												on:item-click={handleItemClick}
-												on:move-click={handleMoveClick}
-												bind:tagList
-												bind:tabSet
-											/>
-										{/if}
-									</svelte:fragment>
+								<!-- Router Slot -->
+								<slot>
+									<div class="content">
+										<Content bind:note={note.content} bind:tags={note.tags} />
+									</div>
+								</slot>
 
-									<!-- Router Slot -->
-									<slot>
-										<div class="content">
-											<Content bind:note={note.content} bind:tags={note.tags} />
-										</div>
-									</slot>
+								<!-- ---- / ---- -->
+							</AppShell>
+						</div>
+					{/each}
 
-									<!-- ---- / ---- -->
-								</AppShell>
-							</div>
-						{/each}
-				
-						<div class="br" />
-				
+					<div class="br" />
 				{/if}
 			</div>
 		</svelte:fragment>
@@ -984,38 +981,47 @@
 		/>
 	</div>
 {/if}
-<div class="footer-right">
-	{#if viewItem != undefined && Object.keys(viewItem).length > 0 && viewItem[tabSet].length>20}		
-	<Paginator settings={paging} on:page={onPageChange} on:amount={onAmountChange} justify='ustify-between'>	</Paginator>
-	{/if}	
-</div>
-<div class="footer-menu">
-	{#if !nowLoading}
-		{#if !isMulti}
-			<button
-				class="btn variant-soft-primary footer-btn hover:bg-blue-700 rounded-full font-bold"
-				on:click={openAddNoteDialog}>add note</button
-			>
+<div class="footer-group">
+	<div class="footer-menu">
+		{#if !nowLoading}
+			{#if !isMulti}
+				<button
+					class="btn variant-soft-primary footer-btn hover:bg-blue-700 rounded-full font-bold"
+					on:click={openAddNoteDialog}>add note</button
+				>
 
-			<button
-				class="btn variant-soft-primary hover:bg-blue-700 footer-btn rounded-full font-bold"
-				on:click={openEditTagDialog}>edit tag</button
-			>
+				<button
+					class="btn variant-soft-primary hover:bg-blue-700 footer-btn rounded-full font-bold"
+					on:click={openEditTagDialog}>edit tag</button
+				>
+			{:else}
+				<button
+					class="btn variant-soft-secondary footer-btn hover:bg-blue-700 rounded-full font-bold"
+					on:click={openTagListDialog}>move selected notes</button
+				>
+				<button
+					class="btn variant-soft-warning hover:bg-orange-700 footer-btn rounded-full font-bold"
+					on:click={clickDeleteNotes}>delete selected notes</button
+				>
+			{/if}
 		{:else}
-			<button
-				class="btn variant-soft-secondary footer-btn hover:bg-blue-700 rounded-full font-bold"
-				on:click={openTagListDialog}>move selected notes</button
-			>
-			<button
-				class="btn variant-soft-warning hover:bg-orange-700 footer-btn rounded-full font-bold"
-				on:click={clickDeleteNotes}>delete selected notes</button
-			>
+			<div class="progress">
+				<ProgressRadial ... stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
+			</div>
 		{/if}
-	{:else}
-		<div class="progress">
-			<ProgressRadial ... stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
-		</div>
-	{/if}
+	
+	
+		{#if viewItem != undefined && Object.keys(viewItem).length > 0 && viewItem[tabSet].length > 20}
+			<Paginator
+				settings={paging}
+				on:page={onPageChange}
+				on:amount={onAmountChange}
+				justify=	'justify-between'
+				select='hidden'
+				
+			/>
+		{/if}
+	</div>
 </div>
 {#if isTagListDialog}
 	<TagListDialog on:tag-click={handleTagClick} bind:tagList bind:tabSet />
@@ -1042,7 +1048,7 @@
 
 <style>
 	.icon-area {
-		margin-right: 1em;
+		margin-right: 0.5em;
 		width: 50px;
 		height: 50px;
 	}
@@ -1053,10 +1059,13 @@
 		border-radius: 50%;
 	}
 	.note {
+		max-width: 1000px;
+		margin: 0.5em auto;
+
 		border: solid 1px rgb(88, 88, 88);
 		word-break: break-all;
-		margin: 0.5em;
-		padding: 1em;
+
+		padding: 1em 0.5em;
 		border-radius: 0.5em;
 	}
 	.date {
@@ -1082,22 +1091,25 @@
 		display: flex;
 		width: 100%;
 	}
-
+	.footer-group {
+		width: 100%;
+	}
 	.footer-menu {
-		display: block;
+		display: flex;
+		justify-content: center;
 		position: fixed;
-		width: fit-content;
-		left: 15px;
+		left: 0;
+		right: 0;
 		bottom: 10px;
 		z-index: 100;
 	}
 	.footer-right {
-		display: block;
 		position: fixed;
-		align-items: end;
-		width:fit-content;
-		left: auto;
-		right: 15px;
+		max-width: 1200px;
+		margin: 0.5em auto;
+		justify-content: center;
+		left: 0;
+		right: 0;
 		bottom: 10px;
 		z-index: 100;
 	}
@@ -1123,6 +1135,7 @@
 	}
 
 	.content {
+		margin-top: 0.5em;
 		white-space: pre-wrap;
 		max-height: 15em; /* 表示範囲の高さを指定 */
 		overflow-y: scroll; /* 縦方向にスクロール可能にする */
