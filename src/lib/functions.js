@@ -9,52 +9,7 @@ import { null_to_empty } from 'svelte/internal';
  */
 export async function getBookmarks(author, relays) {
 
-    // const relayIni = relayInit(relay);
-    // try {
-    //     await relayIni.connect();
-    // } catch (error) {
-    //     throw new Error("error");
-    // }
-
-
-    // const result = new Promise((resolve) => {
-    //     let isSuccess = false;
-    //     const timeoutID = setTimeout(() => {
-    //         resolve(isSuccess);
-    //     }, 5000);
-    //     relayIni.on("connect", () => {
-    //         console.log("is connected");
-    //         isSuccess = true;
-
-    //         clearTimeout(timeoutID);
-    //     });
-    //     relayIni.on("error", () => {
-    //         console.log("failed to coneccted")
-    //         isSuccess = false;
-
-    //         clearTimeout(timeoutID);
-    //     })
-    // });
-    // result.then(result => {
-    //     if (!result) {
-    //         throw new Error("failed to connect relay")
-    //     }
-    //     else {
-    //         return true;
-    //     }
-    // });
-    // if (!result) {
-    //     throw new Error("failed to connect relay")
-    // }
-
-
-    // //以下コネクト成功？
-    // const sub = relayIni.sub([
-    //     {
-    //         kinds: [30001],
-    //         authors: [author],
-    //     },
-    // ]);
+    
 
     const filter = [{
         kinds: [30001],
@@ -166,39 +121,7 @@ export function formatBookmark(bookmark) {
     }
     return fBookmark;
 }
-//     /**
-//      * @type {{[key:string]:string[]}}
-//      */
-//     let fBookmark = {};
-//     for (let i = 0; i < bookmark.length; i++) {
-//         let index;
-//         if(bookmark[i].tags[0][0]=="d"){
-//         index = bookmark[i].tags[0][1];
-//         console.log(index);
-//         fBookmark[index]=[];
-//         }else{continue;}
-//         for (let j = 0; j < bookmark[i].tags.length; j++) {
-//             const thisList = bookmark[i].tags[j];
-//             console.log(thisList);
-//             if (thisList[0] == "e") {
-//                 fBookmark[index].push(thisList[1]);
-//             }
-//         }
-//         //const bookmarkObjs = bookmark[i].tags.slice(1).map((tag) => tag[1]);
-//         //const index = bookmark[i].tags[0][1];
-//         //fBookmark[index] = bookmarkObjs
-//     }
-//     return fBookmark;
-// }
-
-
-//イベント内容検索用リレーたち
-// let RelaysforSeach = [
-//     "wss://relay.nostr.band",
-//     "wss://nostr.wine",
-//     "wss://universe.nostrich.land",
-//     "wss://relay.damus.io"
-// ];
+//    
 
 /**
  * @param {string[]} idList
@@ -238,35 +161,6 @@ export async function getEvent(idList, RelaysforSeach) {
     return result; // Promiseを返す
 }
 
-// let sub = pool.sub(RelaysforSeach, filter);
-// const result = new Promise((resolve) => {
-
-//     const timeoutID = setTimeout(() => {
-//         resolve(eventList);//, pubkeys]);
-//     }, 5000);
-
-//     sub.on('event', event => {
-//         // console.log(event);
-//         // @ts-ignore
-//         eventList[event.id] = event;
-//         //    if (!pubkeys.includes(event.pubkey)) {
-//         //      pubkeys.push(event.pubkey);
-//         //}
-
-//     });
-//     sub.on("eose", () => {
-//         sub.unsub(); //イベントの購読を停止
-//         clearTimeout(timeoutID); //settimeoutのタイマーより早くeoseを受け取ったら、setTimeoutをキャンセルさせる。
-//         resolve(eventList);//, pubkeys]);
-//         clearTimeout(timeoutID);
-//     });
-
-// });
-// //console.log(eventList);
-
-//   await result;// result プロミスの解決を待つ
-//return result;
-//}
 
 
 /**

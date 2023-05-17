@@ -20,6 +20,7 @@
 		AppShell,
 		ListBox,
 		ListBoxItem,
+		Paginator,
 		ProgressRadial,
 		SlideToggle,
 		Tab,
@@ -38,12 +39,12 @@
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		'wss://relay.nostr.band',
-		'wss://nostr.wine',
-		'wss://universe.nostrich.land',
-		'wss://relay.damus.io'
-		//'wss://nostream.localtest.me',
-		//'ws://localhost:7000'
+		//'wss://relay.nostr.band',
+		//'wss://nostr.wine',
+		//'wss://universe.nostrich.land',
+		//'wss://relay.damus.io'
+		'wss://nostream.localtest.me',
+		'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
@@ -141,7 +142,7 @@
 				}
 			}
 			let profiles = {};
-console.log(getPubkeyList);
+			console.log(getPubkeyList);
 			if (getPubkeyList.length > 0) {
 				profiles = await getProfile(getPubkeyList, RelaysforSeach); //key=pubkey,value=profile
 
@@ -199,7 +200,7 @@ console.log(getPubkeyList);
 						id: id,
 						noteId: nip19.noteEncode(id),
 						content: 'undefined',
-						tags:[],
+						tags: [],
 						date: 'unknown',
 						pubkey: 'unknown',
 						name: 'undefined',
@@ -213,7 +214,7 @@ console.log(getPubkeyList);
 						const note = noteList[id];
 						if (note.content != undefined) {
 							item.content = note.content;
-							item.tags=note.tags;
+							item.tags = note.tags;
 						}
 						item.pubkey = nip19.npubEncode(note.pubkey);
 						item.date = new Date(note.created_at * 1000).toLocaleString();
@@ -424,7 +425,7 @@ console.log(getPubkeyList);
 				id: hexId,
 				noteId: nip19.noteEncode(hexId),
 				content: 'unknown',
-				tags:[],
+				tags: [],
 				date: 'unknown',
 				pubkey: 'unknown',
 				name: 'undefined',
@@ -435,7 +436,7 @@ console.log(getPubkeyList);
 			};
 			if (thisNote && thisNote.content !== undefined && thisNote.content.trim() !== '') {
 				item.content = thisNote.content;
-				item.tags=thisNote.tags;
+				item.tags = thisNote.tags;
 				item.date = new Date(thisNote.created_at * 1000).toLocaleString();
 				item.pubkey = thisNote.pubkey;
 			}
@@ -662,7 +663,7 @@ console.log(getPubkeyList);
 		};
 		toastStore.trigger(t);
 
-	//	console.log(selectedList);
+		//	console.log(selectedList);
 	}
 
 	async function deletedNotes(ids) {
@@ -683,20 +684,22 @@ console.log(getPubkeyList);
 
 	/**
 	 * @param {string} _tabSet
-	 * @param {number} _ind
+	 * @param {{ id: string; noteId: string; isMenuOpen: boolean; date: string; name: string; icon: string; display_name: string; content: string; isChecked: boolean; tags: string[][]; }} note
 	 */
-	function onCleckBoxChange(_tabSet, _ind) {
-		console.log(viewItem[tabSet][_ind]);
-		if (viewItem[tabSet][_ind].isChecked) {
-			selectedList.push([tabSet, _ind]);
+	function onCleckBoxChange(_tabSet, note) {
+		//console.log(viewItem[tabSet][_ind]);
+		if (viewItem[tabSet][viewItem[tabSet].indexOf(note)].isChecked) {
+			selectedList.push([tabSet, viewItem[tabSet].indexOf(note)]);
 		} else {
-			selectedList.slice(selectedList.indexOf([tabSet, _ind]));
+			selectedList.slice(selectedList.indexOf([tabSet, viewItem[tabSet].indexOf(note)]));
 		}
 	}
 
 	//タグの切り替えを検知（複数選択のときしかいらないたぶん）
 	function onClickTab() {
-		if(!isMulti){return;}
+		if (!isMulti) {
+			return;
+		}
 		//tabが新しくなったらチェックボックスを全部からにする。
 		//selectedListはからにする（全部ふぉるすにするから消しておけ）
 		console.log(selectedList); // = [];	//前のタグのセレクト情報をリセット
@@ -719,7 +722,6 @@ console.log(getPubkeyList);
 
 	//マルチ選択　選択中のノートを移動ボタンをクリック
 	async function handleTagClick(_item) {
-		
 		console.log(_item.detail.name);
 		const str = _item.detail.name;
 		if (str == 'close') {
@@ -787,6 +789,48 @@ console.log(getPubkeyList);
 	function openTagListDialog() {
 		isTagListDialog = true;
 	}
+
+
+	//--------------------------------------Pagenatorの設定この辺
+	// PaginatorSettings
+	/**@type {import('@skeletonlabs/skeleton/dist/components/Paginator/types').PaginationSettings}*/
+	let paging = {
+		offset: 0,
+		limit: 10,
+		size: 10,
+		amounts: [10]
+	};
+
+	/**
+	 * @type {any[]}
+	 */
+	let paginatedSource = [];
+
+	//PaginatorSettings
+	$: if (viewItem != undefined && Object.keys(viewItem).length > 0) {
+		paging = {
+			offset: 0,
+			limit: 10,
+			size: viewItem[tabSet].length,
+			amounts: [10]
+		};
+	}
+	$: if (viewItem != undefined && Object.keys(viewItem).length > 0) {
+		console.log(tabSet);
+		paginatedSource = viewItem[tabSet].slice(
+			paging.offset * paging.limit, // start
+			paging.offset * paging.limit + paging.limit // end
+		);
+		console.log(paginatedSource);
+	}
+	function onPageChange(e) {
+		paginatedSource = viewItem[tabSet].slice(
+			paging.offset * paging.limit, // start
+			paging.offset * paging.limit + paging.limit // end
+		);
+		console.log('event:page', e.detail);
+	}
+
 </script>
 
 <Toast />
@@ -828,67 +872,72 @@ console.log(getPubkeyList);
 			</Tab>
 		{/each}
 		<!-- Tab Panels --->
-
+		
 		<svelte:fragment slot="panel">
 			<div class="panel">
 				{#if viewItem != undefined && Object.keys(viewItem).length > 0}
-					{#each viewItem[tabSet] as note, ind}
-						<div class="note">
-							<AppShell>
-								<svelte:fragment slot="sidebarLeft">
-									<div class="icon-area">
-										<img class="icon" src={note.icon} alt="icon" />
-									</div>
-								</svelte:fragment>
-
-								<svelte:fragment slot="pageHeader">
-									<div class="header">
-										<div class="display_name">
-											{note.display_name}
+				
+					<Paginator settings={paging} on:page={onPageChange}>
+						ここに入力した内容が画面上に表示されない
+						{#each paginatedSource as note}
+							<div class="note">
+								<AppShell>
+									<svelte:fragment slot="sidebarLeft">
+										<div class="icon-area">
+											<img class="icon" src={note.icon} alt="icon" />
 										</div>
-										<div class="name">@{note.name}</div>
-										<div class="date">{note.date}</div>
-									</div>
-								</svelte:fragment>
+									</svelte:fragment>
 
-								<svelte:fragment slot="sidebarRight">
-									{#if !isMulti}
-										<button
-											on:click={() => onClickMenu(note)}
-											class="btn-icon btn-icon-sm variant-filled-primary rounded-full"
-											style="position:relative">▼</button
-										>
-									{:else}
-										<input
-											class="checkbox"
-											type="checkbox"
-											bind:checked={note.isChecked}
-											on:change={() => {
-												onCleckBoxChange(tabSet, ind);
-											}}
-										/>
-									{/if}
-									{#if note.isMenuOpen}
-										<PopupMenu
-											on:item-click={handleItemClick}
-											on:move-click={handleMoveClick}
-											bind:tagList
-											bind:tabSet
-										/>
-									{/if}
-								</svelte:fragment>
+									<svelte:fragment slot="pageHeader">
+										<div class="header">
+											<div class="display_name">
+												{note.display_name}
+											</div>
+											<div class="name">@{note.name}</div>
+											<div class="date">{note.date}</div>
+										</div>
+									</svelte:fragment>
 
-								<!-- Router Slot -->
-								<slot>
-									<div class="content">
-										<Content bind:note={note.content} bind:tags={note.tags}/>
-									</div>
-								</slot>
+									<svelte:fragment slot="sidebarRight">
+										{#if !isMulti}
+											<button
+												on:click={() => onClickMenu(note)}
+												class="btn-icon btn-icon-sm variant-filled-primary rounded-full"
+												style="position:relative">▼</button
+											>
+										{:else}
+											<input
+												class="checkbox"
+												type="checkbox"
+												bind:checked={note.isChecked}
+												on:change={() => {
+													onCleckBoxChange(tabSet, note);
+												}}
+											/>
+										{/if}
+										{#if note.isMenuOpen}
+											<PopupMenu
+												on:item-click={handleItemClick}
+												on:move-click={handleMoveClick}
+												bind:tagList
+												bind:tabSet
+											/>
+										{/if}
+									</svelte:fragment>
 
-								<!-- ---- / ---- -->
-							</AppShell>
-						</div>
-					{/each}
+									<!-- Router Slot -->
+									<slot>
+										<div class="content">
+											<Content bind:note={note.content} bind:tags={note.tags} />
+										</div>
+									</slot>
+
+									<!-- ---- / ---- -->
+								</AppShell>
+							</div>
+						{/each}
+						<div class="br" />
+					</Paginator>
 				{/if}
 			</div>
 		</svelte:fragment>
@@ -965,7 +1014,6 @@ console.log(getPubkeyList);
 		margin-right: 1em;
 		width: 50px;
 		height: 50px;
-		
 	}
 	.icon {
 		width: 100%;
@@ -1047,5 +1095,8 @@ console.log(getPubkeyList);
 		margin-top: -1em;
 		max-height: calc(100vh - 9em); /* 表示範囲の高さを指定 */
 		overflow-y: scroll; /* 縦方向にスクロール可能にする */
+	}
+	.br {
+		padding-bottom: 3em;
 	}
 </style>
