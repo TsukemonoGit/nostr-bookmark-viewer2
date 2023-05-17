@@ -983,7 +983,9 @@
 {/if}
 <div class="footer-group">
 	<div class="footer-menu">
+		
 		{#if !nowLoading}
+		<div class="footer-btm">
 			{#if !isMulti}
 				<button
 					class="btn variant-soft-primary footer-btn hover:bg-blue-700 rounded-full font-bold"
@@ -997,13 +999,14 @@
 			{:else}
 				<button
 					class="btn variant-soft-secondary footer-btn hover:bg-blue-700 rounded-full font-bold"
-					on:click={openTagListDialog}>move selected notes</button
+					on:click={openTagListDialog}>move notes</button
 				>
 				<button
 					class="btn variant-soft-warning hover:bg-orange-700 footer-btn rounded-full font-bold"
-					on:click={clickDeleteNotes}>delete selected notes</button
+					on:click={clickDeleteNotes}>delete notes</button
 				>
 			{/if}
+		</div>
 		{:else}
 			<div class="progress">
 				<ProgressRadial ... stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
@@ -1018,7 +1021,7 @@
 				on:amount={onAmountChange}
 				justify=	'justify-between'
 				select='hidden'
-				
+				buttonClasses="btn-icon variant-soft-tertiary footer-btn hover:bg-purple-700 rounded-full font-bold"
 			/>
 		{/if}
 	</div>
@@ -1144,5 +1147,9 @@
 	}
 	.br {
 		padding-bottom: 3em;
+	}
+	.footer-btm{
+		margin-top:auto;
+		margin-bottom:0;
 	}
 </style>
