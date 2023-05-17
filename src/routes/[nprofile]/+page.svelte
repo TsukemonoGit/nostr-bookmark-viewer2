@@ -1059,7 +1059,7 @@
 		border-radius: 50%;
 	}
 	.note {
-		max-width: 1000px;
+		max-width: 1200px;
 		margin: 0.5em auto;
 
 		border: solid 1px rgb(88, 88, 88);
@@ -1103,16 +1103,7 @@
 		bottom: 10px;
 		z-index: 100;
 	}
-	.footer-right {
-		position: fixed;
-		max-width: 1200px;
-		margin: 0.5em auto;
-		justify-content: center;
-		left: 0;
-		right: 0;
-		bottom: 10px;
-		z-index: 100;
-	}
+
 
 	.header-menu {
 		border: solid 1px rgb(88, 88, 88);
