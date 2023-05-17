@@ -55,7 +55,10 @@
 			message = message + 'pubkeyを確認してください';
 			return;
 		}
-
+		if (relays.length == 0) {
+			message = 'リレーを追加してください';
+			return;
+		}
 		try {
 			nprofile = makeNprofile();
 		} catch {
@@ -117,25 +120,25 @@
 		};
 		return nip19.nprofileEncode(profile);
 	}
-	let nowProgress=false;
+	let nowProgress = false;
 	async function addRelayList() {
-		if(!nowProgress){
-		nowProgress=true;
-		message="";
-		console.log('addrelay');
-		//リレーチェック
-		try {
-			await checkExistUrl();
-			relays.push(relay);
-			relays = relays;
-			relay = '';
-		} catch {
-			message = message + 'リレーURLを確認してください';
-			nowProgress=false;
-			return;
+		if (!nowProgress) {
+			nowProgress = true;
+			message = '';
+			console.log('addrelay');
+			//リレーチェック
+			try {
+				await checkExistUrl();
+				relays.push(relay);
+				relays = relays;
+				relay = '';
+			} catch {
+				message = message + 'リレーURLを確認してください';
+				nowProgress = false;
+				return;
+			}
+			nowProgress = false;
 		}
-	nowProgress=false;
-	}
 	}
 	function clickRelay(idx) {
 		console.log(idx.index);
@@ -165,7 +168,7 @@
 	<div class="content">
 		<p class="relay">リレー(relay)</p>
 		<div class="input-group input-group-divider grid-cols-[auto_1fr]">
-			<button class="py-1 btn variant-filled rounded-full" on:click={addRelayList}  >add relay</button
+			<button class="py-1 btn variant-filled rounded-full" on:click={addRelayList}>add relay</button
 			>
 			<input class="input1" type="text" bind:value={relay} placeholder="wss://..." />
 		</div>
