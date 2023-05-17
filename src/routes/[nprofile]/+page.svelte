@@ -186,7 +186,7 @@
 			amounts: [50]
 		};
 		nowLoading = false;
-		initialHeight = detailElement.clientHeight;
+
 	});
 
 	/**
@@ -854,32 +854,18 @@
 		console.log('event:page', e.detail);
 	}
 
-	function details(e){
-		isDetailOpen = !isDetailOpen;
-		panelMaxHeight = `max-height: calc(100vh - ${lines+7}em)`; 
-    const finalHeight = detailElement.clientHeight;
-     lines = Math.ceil(finalHeight / initialHeight);
-    console.log('行数:', line);
-	
-    // 行数に基づいてmax-heightを調整するなどの処理を追加する
-  
-}
-let lines=7;
-let isDetailOpen = false;
-let panelMaxHeight = 'max-height: calc(100vh - 7em)'; // 初期値を設定してください
-let initialHeight;
-let detailElement;
+
 </script>
 
 <Toast />
 
 <p style="color:coral">ご利用は自己責任でお願いします</p>
 <div class="head-li">
-	<ul class="list-dl"  bind:this={detailElement}>
+	<ul class="list-dl">
 		
 		{#if relays != undefined}
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
-			<details on:click={details} >
+			<details >
 				<summary>pubkey, relays</summary>
 				<li>【pubkey】</li>
 				<ul>
@@ -920,7 +906,7 @@ let detailElement;
 		<!-- Tab Panels --->
 
 		<svelte:fragment slot="panel">
-			<div class="panel" bind:this={panelElement}  style={panelMaxHeight}>
+			<div class="panel" bind:this={panelElement}>
 				{#if viewItem != undefined && Object.keys(viewItem).length > 0}
 					{#each paginatedSource as note}
 						<div class="note">
@@ -1160,7 +1146,7 @@ let detailElement;
 	}
 	.panel {
 		margin-top: -1em;
-		/* max-height: calc(100vh - 7em); 表示範囲の高さを指定 */
+		 max-height: calc(100vh - 7em); /*表示範囲の高さを指定 */
 		overflow-y: scroll; /* 縦方向にスクロール可能にする */
 	}
 	.br {
