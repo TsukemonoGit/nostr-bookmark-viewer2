@@ -975,7 +975,8 @@
 
 {#if !nowLoading}
 	<div class="header-menu">
-		<p>switch mode</p>
+		<div class="mode">mode</div>
+		
 		<SlideToggle
 			active="variant-ghost-primary"
 			name="toggle"
@@ -984,7 +985,9 @@
 				nClickMultiMode(isMulti);
 			}}
 		/>
+		
 	</div>
+
 {/if}
 <div class="footer-group">
 	<div class="footer-menu">
@@ -1097,6 +1100,7 @@
 	.header {
 		display: flex;
 		width: 100%;
+		vertical-align: center;
 	}
 	.footer-group {
 		width: 100%;
@@ -1115,13 +1119,14 @@
 	.header-menu {
 		border: solid 1px rgb(88, 88, 88);
 		border-radius: 0.5em;
-		padding: 0.4em;
+		padding: 0 0.2em ;
 		background-color: rgba(47, 52, 68, 0.822);
 		display: block;
 		position: fixed;
 		text-align: center;
-		right: 10px;
-		top: 10px;
+	
+		right: 5px;
+		top: 5px;
 		z-index: 100;
 	}
 	.progress {
@@ -1155,5 +1160,11 @@
 	.footer-btm{
 		margin-top:auto;
 		margin-bottom:0;
+	}
+
+	.mode{
+	
+  align-items: flex-end;
+  font-size: smaller;
 	}
 </style>
