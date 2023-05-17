@@ -1014,7 +1014,7 @@
 				on:amount={onAmountChange}
 				justify=	'justify-between'
 				select='hidden'
-				buttonClasses="btn-icon variant-soft-tertiary footer-btn hover:bg-purple-700 rounded-full font-bold"
+				buttonClasses="btn-icon variant-ghost-tertiary footer-btn  rounded-full font-bold"
 			/>
 		{/if}
 	</div>
