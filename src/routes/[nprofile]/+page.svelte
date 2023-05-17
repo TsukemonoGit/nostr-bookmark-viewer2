@@ -181,9 +181,9 @@
 		}
 		paging = {
 			offset: 0,
-			limit: 20,
+			limit: 50,
 			size: viewItem[tabSet].length,
-			amounts: [20, 50, 100]
+			amounts: [50]
 		};
 		nowLoading = false;
 	});
@@ -708,7 +708,7 @@
 				offset: 0,
 				limit: 50,
 				size: viewItem[tabSet].length,
-				amounts: [50, 100]
+				amounts: [50]
 			};
 		}
 
@@ -812,7 +812,7 @@
 		offset: 0,
 		limit: 50,
 		size: 0,
-		amounts: [50, 100]
+		amounts: [50]
 	};
 
 	/**
@@ -851,12 +851,6 @@
 	}
 	function onAmountChange(e) {
 		console.log('event:page', e.detail);
-		paging = {
-			offset: 0,
-			limit: e.detail,
-			size: viewItem[tabSet].length,
-			amounts: [50, 100]
-		};
 	}
 </script>
 
