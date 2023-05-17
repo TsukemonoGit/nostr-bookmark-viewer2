@@ -39,12 +39,12 @@
 
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
-		//'wss://relay.nostr.band',
-		//'wss://nostr.wine',
-		//'wss://universe.nostrich.land',
-		//'wss://relay.damus.io'
-		'wss://nostream.localtest.me',
-		'ws://localhost:7000'
+		'wss://relay.nostr.band',
+		'wss://nostr.wine',
+		'wss://universe.nostrich.land',
+		'wss://relay.damus.io'
+		//'wss://nostream.localtest.me',
+		//'ws://localhost:7000'
 	];
 	/** @type {string}*/
 	let pubkey;
@@ -179,7 +179,12 @@
 			toastStore.trigger(t);
 			return;
 		}
-
+		paging = {
+	 		offset: 0,
+	 		limit: 20,
+	 		size: viewItem[tabSet].length,
+	 		amounts: [20,50,100]
+	 	};
 		nowLoading = false;
 	});
 
@@ -697,6 +702,15 @@
 
 	//タグの切り替えを検知（複数選択のときしかいらないたぶん）
 	function onClickTab() {
+		if (viewItem != undefined && Object.keys(viewItem).length > 0) {
+		paging = {
+	 		offset: 0,
+	 		limit: 20,
+	 		size: viewItem[tabSet].length,
+	 		amounts: [20,50,100]
+	 	};
+	}
+
 		if (!isMulti) {
 			return;
 		}
@@ -796,9 +810,9 @@
 	/**@type {import('@skeletonlabs/skeleton/dist/components/Paginator/types').PaginationSettings}*/
 	let paging = {
 		offset: 0,
-		limit: 10,
-		size: 10,
-		amounts: [10]
+		limit: 100,
+		size: 0,
+		amounts: [20,50,100]
 	};
 
 	/**
@@ -806,15 +820,15 @@
 	 */
 	let paginatedSource = [];
 
-	//PaginatorSettings
-	$: if (viewItem != undefined && Object.keys(viewItem).length > 0) {
-		paging = {
-			offset: 0,
-			limit: 10,
-			size: viewItem[tabSet].length,
-			amounts: [10]
-		};
-	}
+	// //PaginatorSettings
+	// $: if (viewItem != undefined && Object.keys(viewItem).length > 0) {
+	// 	paging = {
+	// 		offset: 0,
+	// 		limit: 20,
+	// 		size: viewItem[tabSet].length,
+	// 		amounts: [20,50,100]
+	// 	};
+	// }
 	$: if (viewItem != undefined && Object.keys(viewItem).length > 0) {
 		console.log(tabSet);
 		paginatedSource = viewItem[tabSet].slice(
@@ -823,14 +837,27 @@
 		);
 		console.log(paginatedSource);
 	}
+	let panelElement;
 	function onPageChange(e) {
 		paginatedSource = viewItem[tabSet].slice(
 			paging.offset * paging.limit, // start
 			paging.offset * paging.limit + paging.limit // end
 		);
+		// スクロール位置を一番上に移動する
+		  // スクロール位置を一番上に設定
+		  panelElement.scroll({ top: 0, behavior: 'auto' });
+
 		console.log('event:page', e.detail);
 	}
-
+	function onAmountChange(e){
+		console.log('event:page', e.detail);
+		paging = {
+		offset: 0,
+		limit: e.detail,
+		size: viewItem[tabSet].length,
+		amounts: [20,50,100]
+	};
+	}
 </script>
 
 <Toast />
@@ -874,11 +901,9 @@
 		<!-- Tab Panels --->
 		
 		<svelte:fragment slot="panel">
-			<div class="panel">
+			<div class="panel" bind:this={panelElement}>
 				{#if viewItem != undefined && Object.keys(viewItem).length > 0}
 				
-					<Paginator settings={paging} on:page={onPageChange}>
-						ここに入力した内容が画面上に表示されない
 						{#each paginatedSource as note}
 							<div class="note">
 								<AppShell>
@@ -936,8 +961,9 @@
 								</AppShell>
 							</div>
 						{/each}
+				
 						<div class="br" />
-					</Paginator>
+				
 				{/if}
 			</div>
 		</svelte:fragment>
@@ -957,7 +983,11 @@
 		/>
 	</div>
 {/if}
-
+<div class="footer-right">
+	{#if viewItem != undefined && Object.keys(viewItem).length > 0 && viewItem[tabSet].length>20}		
+	<Paginator settings={paging} on:page={onPageChange} on:amount={onAmountChange} justify='ustify-between'>	</Paginator>
+	{/if}	
+</div>
 <div class="footer-menu">
 	{#if !nowLoading}
 		{#if !isMulti}
@@ -1055,11 +1085,22 @@
 	.footer-menu {
 		display: block;
 		position: fixed;
-		width: 100%;
+		width: fit-content;
 		left: 15px;
 		bottom: 10px;
 		z-index: 100;
 	}
+	.footer-right {
+		display: block;
+		position: fixed;
+		align-items: end;
+		width:fit-content;
+		left: auto;
+		right: 15px;
+		bottom: 10px;
+		z-index: 100;
+	}
+
 	.header-menu {
 		border: solid 1px rgb(88, 88, 88);
 		border-radius: 0.5em;
