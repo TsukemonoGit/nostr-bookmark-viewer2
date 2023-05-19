@@ -3,8 +3,6 @@
 	import { ListBox, ListBoxItem } from '@skeletonlabs/skeleton';
 	import { createEventDispatcher, onMount } from 'svelte';
 
-	
-
 	export let tagList;
 	export let tabSet;
 	let filteredTabList = [];
@@ -12,12 +10,10 @@
 
 	const dispatch = createEventDispatcher();
 
-
-		$:filteredTabList = tagList.filter((tab) => tab !== tabSet);
-	
+	$: filteredTabList = tagList.filter((tab) => tab !== tabSet);
 
 	function onClickMoveMenu(item) {
-        console.log(item.name);
+		console.log(item.name);
 		if (item.name == close) {
 			dispatch('closeTagListDialog');
 		} else {
@@ -31,25 +27,26 @@
 	//この問題を解決するには、子要素のイベントが親要素に伝播しないようにする必要があります。具体的には、li タグや ListBox タグに on:click イベントが発生したときに、event.stopPropagation() メソッドを呼び出してイベント伝播を止めるようにします。
 </script>
 
-
-	<button class="back" on:click={() => onClickMoveMenu({ name: 'close' })}>
+<button class="back" on:click={() => onClickMoveMenu({ name: 'close' })}>
+	<div class="move">
+		<div class="move-to">move notes to</div>
 		<ul class="move-list">
 			{#each filteredTabList as item}
 				<li>
 					<button
-						class=" btn1 btn variant-ghost-primary"
+						class=" btn1 btn"
 						on:click={(event) => {
 							event.stopPropagation();
 							onClickMoveMenu({ name: item });
 						}}
 					>
-						to [{item}]
+						{item}
 					</button>
 				</li>
 			{/each}
 		</ul>
-	</button>
-
+	</div>
+</button>
 
 <style>
 	.back {
@@ -63,13 +60,26 @@
 		align-items: center;
 		z-index: 9999;
 	}
+	.move{
+		border: solid 1px rgb(88, 88, 88);
+		background-color: black;
+	}
 
 	.move-list {
+	
 		max-height: 15em; /* 表示範囲の高さを指定 */
 		overflow-y: scroll; /* 縦方向にスクロール可能にする */
 	}
 	.btn1 {
 		width: 100%;
 		border-radius: 0%;
+		font-weight: bold;
+		color: black;
+		border: solid 1px rgb(0, 0, 0);
+		background-color: rgba(205, 231, 255, 0.596);
+	}
+	.move-to{
+		margin:0.5em 3em;
+		font-weight: bold;
 	}
 </style>
