@@ -114,6 +114,8 @@
 		border-radius: 0%;
 		font-weight: bold;
 		color:black;
+		border: solid 1px rgba(0, 0, 0, 0.596);
+		
 		background-color:rgba(205, 231, 255, 0.596);
 		 /* text-shadow: 0.1em 0.1em 0em blue , -0.1em 0.1em 0em lightskyblue , -0.1em -0.1em 0em lightskyblue , 0.1em -0.1em 0em lightskyblue */
 	}
