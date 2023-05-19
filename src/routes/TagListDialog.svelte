@@ -80,6 +80,6 @@
 	.move-to{
 		padding:0.5em 3em;
 		font-weight: bold;
-		background-color: black;
+		background-color: rgba(0, 0, 0, 0.6);
 	}
 </style>
