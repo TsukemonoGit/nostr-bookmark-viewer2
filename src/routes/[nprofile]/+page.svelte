@@ -654,6 +654,7 @@
 
 	//複数ノートを削除
 	async function clickDeleteNotes() {
+		selectedList.sort((a, b) => b[1] - a[1]);
 		const ids = selectedList.map(([x, y]) => viewItem[x][y].id);
 
 		/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
@@ -673,14 +674,15 @@
 	}
 
 	async function deletedNotes(ids) {
+
 		nowLoading = true;
 		await deleteNote(ids);
 		const seleList = selectedList;
-		const tmpVI = viewItem;
+		seleList.sort((a, b) => b[1] - a[1]);
 		//削除したのを削除
 		for (let i = 0; i < seleList.length; i++) {
 			const [x, y] = seleList[i];
-			const index = viewItem[x].findIndex((value) => value === tmpVI[x][y]);
+			const index = viewItem[x].findIndex((value) => value === viewItem[x][y]);
 			viewItem[x].splice(index, 1);
 		}
 		viewItem = viewItem;
@@ -697,8 +699,10 @@
 		if (viewItem[tabSet][viewItem[tabSet].indexOf(note)].isChecked) {
 			selectedList.push([tabSet, viewItem[tabSet].indexOf(note)]);
 		} else {
-			selectedList.slice(selectedList.indexOf([tabSet, viewItem[tabSet].indexOf(note)]));
+			selectedList.splice(selectedList.indexOf([tabSet, viewItem[tabSet].indexOf(note)]), 1);
+
 		}
+		console.log(selectedList);
 	}
 
 	//タグの切り替えを検知（複数選択のときしかいらないたぶん）
@@ -762,6 +766,7 @@
 
 	//複数ノートを移動
 	async function moveSelectedNotes(str) {
+		selectedList.sort((a, b) => b[1] - a[1]);
 		nowLoading = true;
 		console.log(`${tabSet} から　${str}`);
 		//selectedにはいってるやつを今のタグtabSetから写し先strへ
@@ -790,11 +795,12 @@
 		viewItem = viewItem;
 		await deleteNote(ids);
 
-		const tmpVI = viewItem;
+	
+		
 		//削除したのを削除
 		for (let i = 0; i < seleList.length; i++) {
 			const [x, y] = seleList[i];
-			const index = viewItem[x].findIndex((value) => value === tmpVI[x][y]);
+			const index = viewItem[x].findIndex((value) => value === viewItem[x][y]);
 			viewItem[x].splice(index, 1);
 		}
 		viewItem = viewItem;
