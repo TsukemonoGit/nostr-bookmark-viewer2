@@ -1135,6 +1135,7 @@
 	}
 	.footer-btn {
 		margin: 5px;
+		text-shadow: 1px 1px 2px rgb(0, 0, 0);
 	}
 
 	.content {
