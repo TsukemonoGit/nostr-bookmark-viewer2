@@ -113,6 +113,6 @@
 		width: 100%;
 		border-radius: 0%;
 		font-weight: bold;
-		text-shadow: 1px 1px 0px black , 1px -1px 0px black, -1px -1px 0px black, -1px 1px 0px black
+		text-shadow: 0.1em 0.1em 0.1em darkblue 
 	}
 </style>
