@@ -40,9 +40,9 @@
 	//イベント内容検索用リレーたち
 	let RelaysforSeach = [
 		'wss://relay.nostr.band',
-		'wss://nostr.wine',
+			'wss://nostr.wine',
 		'wss://universe.nostrich.land',
-		'wss://relay.damus.io'
+			'wss://relay.damus.io'
 		//'wss://nostream.localtest.me',
 		//'ws://localhost:7000'
 	];
@@ -186,7 +186,6 @@
 			amounts: [50]
 		};
 		nowLoading = false;
-
 	});
 
 	/**
@@ -332,6 +331,7 @@
 	 * @param {string | string[]} hexId
 	 */
 	async function deleteNote(hexId) {
+		let isSuccess = false;
 		/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 		let t;
 		viewProgress = true;
@@ -347,6 +347,7 @@
 				background: 'bg-orange-500 text-white width-filled '
 			};
 		} else {
+			isSuccess = true;
 			t = {
 				message: responseEvent.msg.join('\n'),
 				timeout: 5000
@@ -362,6 +363,7 @@
 		viewItem = viewItem;
 		console.log(viewItem);
 		viewProgress = false;
+		return isSuccess;
 	}
 
 	function openAddNoteDialog() {
@@ -647,19 +649,15 @@
 		onClickTab();
 		// ここに何かしらの処理を記述する
 	}
-	/**
-	 * @type {any[][]}
-	 */
-	let selectedList = [];
 
 	//複数ノートを削除
 	async function clickDeleteNotes() {
-		selectedList.sort((a, b) => b[1] - a[1]);
-		const ids = selectedList.map(([x, y]) => viewItem[x][y].id);
+		//selectedList.sort((a, b) => b[1] - a[1]);
+		ids = viewItem[tabSet].filter((item) => item.isChecked).map((item) => item.id);
 
 		/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 		const t = await {
-			message: `delete ${selectedList.length} notes `,
+			message: `delete ${ids.length} notes `,
 			action: {
 				label: 'DELETE',
 				response: () => deletedNotes(ids)
@@ -674,36 +672,21 @@
 	}
 
 	async function deletedNotes(ids) {
+		// selectedList = viewItem[tabSet]
+		// 	.filter((item) => item.isChecked)
+		// 	.map((item) => [tabSet, item.isChecked]);
 
 		nowLoading = true;
-		await deleteNote(ids);
-		const seleList = selectedList;
-		seleList.sort((a, b) => b[1] - a[1]);
-		//削除したのを削除
-		for (let i = 0; i < seleList.length; i++) {
-			const [x, y] = seleList[i];
-			const index = viewItem[x].findIndex((value) => value === viewItem[x][y]);
-			viewItem[x].splice(index, 1);
+		const isSuccess = await deleteNote(ids);
+		if (isSuccess) {
+			//削除したのを削除
+			viewItem[tabSet] = viewItem[tabSet].filter((item, index) => !ids.includes(item.id));
 		}
-		viewItem = viewItem;
-		selectedList = [];
+		//selectedList = [];
 		nowLoading = false;
 	}
 
-	/**
-	 * @param {string} _tabSet
-	 * @param {{ id: string; noteId: string; isMenuOpen: boolean; date: string; name: string; icon: string; display_name: string; content: string; isChecked: boolean; tags: string[][]; }} note
-	 */
-	function onCleckBoxChange(_tabSet, note) {
-		//console.log(viewItem[tabSet][_ind]);
-		if (viewItem[tabSet][viewItem[tabSet].indexOf(note)].isChecked) {
-			selectedList.push([tabSet, viewItem[tabSet].indexOf(note)]);
-		} else {
-			selectedList.splice(selectedList.indexOf([tabSet, viewItem[tabSet].indexOf(note)]), 1);
 
-		}
-		console.log(selectedList);
-	}
 
 	//タグの切り替えを検知（複数選択のときしかいらないたぶん）
 	function onClickTab() {
@@ -722,16 +705,19 @@
 		}
 		//tabが新しくなったらチェックボックスを全部からにする。
 		//selectedListはからにする（全部ふぉるすにするから消しておけ）
-		console.log(selectedList); // = [];	//前のタグのセレクト情報をリセット
+		//	console.log(selectedList); // = [];	//前のタグのセレクト情報をリセット
 		//今のタグの選択状況をリセット
 
 		ClearSelectList();
 	}
 	function ClearSelectList() {
-		for (const [x, y] of selectedList) {
-			viewItem[x][y].isChecked = false;
-		}
-		selectedList = [];
+		viewItem[tabSet].forEach((item) => {
+			item.isChecked = false;
+		});
+		// for (const [x, y] of selectedList) {
+		// 	viewItem[x][y].isChecked = false;
+		// }
+		ids = [];
 		// for(let i = 0 ; i < selectedList.length;i++){
 		// 	viewItem[selectedList[i][0]][selectedList[i][1]].isChecked=false;
 		// }
@@ -740,8 +726,14 @@
 		// });
 	}
 
+	/**
+	 * @type {string | string[]}
+	 */
+	let ids = [];
 	//マルチ選択　選択中のノートを移動ボタンをクリック
 	async function handleTagClick(_item) {
+		ids = viewItem[tabSet].filter((item) => item.isChecked).map((item) => item.id);
+
 		console.log(_item.detail.name);
 		const str = _item.detail.name;
 		if (str == 'close') {
@@ -750,7 +742,7 @@
 			isTagListDialog = false;
 			/**@type {import('@skeletonlabs/skeleton').ToastSettings}*/
 			const t = await {
-				message: `from [${tabSet}] to [${str}] [${selectedList.length}]notes`,
+				message: `from [${tabSet}] to [${str}] [${ids.length}]notes`,
 				action: {
 					label: 'MOVE',
 					response: () => moveSelectedNotes(str)
@@ -766,13 +758,16 @@
 
 	//複数ノートを移動
 	async function moveSelectedNotes(str) {
-		selectedList.sort((a, b) => b[1] - a[1]);
+		//console.log(selectedList);
+		//selectedList.sort((a, b) => b[1] - a[1]);
+
 		nowLoading = true;
 		console.log(`${tabSet} から　${str}`);
 		//selectedにはいってるやつを今のタグtabSetから写し先strへ
-		const ids = selectedList.map(([x, y]) => viewItem[x][y].id);
+		//const ids = selectedList.map(([x, y]) => viewItem[x][y].id);
 
 		const responseEvent = await addNoteEvent(ids, event30001[tagList.indexOf(str)], relays);
+		console.log(responseEvent);
 		if (!responseEvent.isSuccess) {
 			throw new Error(`Fail to add note id:${str}`);
 		}
@@ -781,30 +776,29 @@
 			message: responseEvent.msg.join('\n'),
 			timeout: 5000
 		};
-		const seleList = selectedList;
-		const selectedItems = [
-			...new Set(
-				selectedList.map(([x, y]) => {
-					viewItem[x][y].isChecked = false;
-					return viewItem[x][y];
-				})
-			)
-		];
-
-		viewItem[str].push(...selectedItems);
-		viewItem = viewItem;
-		await deleteNote(ids);
-
+		toastStore.trigger(t);
 	
+
+		viewItem[tabSet].forEach((item) => {
+			item.isChecked = false;
+		});
 		
-		//削除したのを削除
-		for (let i = 0; i < seleList.length; i++) {
-			const [x, y] = seleList[i];
-			const index = viewItem[x].findIndex((value) => value === viewItem[x][y]);
-			viewItem[x].splice(index, 1);
+		for (let i = 0; i < ids.length; i++) {
+			const id = ids[i];
+			const item = viewItem[tabSet].find((element) => element.id === id);
+			if (item) {
+				viewItem[str].push(item);
+			}
 		}
 		viewItem = viewItem;
-		selectedList = [];
+
+		const isSuccess = await deleteNote(ids);
+		if (isSuccess) {
+			//削除したのを削除
+			viewItem[tabSet] = viewItem[tabSet].filter((item, index) => !ids.includes(item.id));
+		}
+		viewItem = viewItem;
+		ids = [];
 		nowLoading = false;
 	}
 
@@ -859,8 +853,6 @@
 	function onAmountChange(e) {
 		console.log('event:page', e.detail);
 	}
-
-
 </script>
 
 <Toast />
@@ -868,25 +860,24 @@
 <p style="color:coral">ご利用は自己責任でお願いします</p>
 <div class="head-li">
 	<ul class="list-dl">
-		
 		{#if relays != undefined}
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
-			<details >
+			<details>
 				<summary>pubkey, relays</summary>
 				<li>【pubkey】</li>
 				<ul>
-				<li class="list">
-					{nip19.npubEncode(pubkey)}
-				</li>
-			</ul>
-			<li>【relay】</li>
-			<ul>
-				{#each relays as relay}
 					<li class="list">
-						{relay}
+						{nip19.npubEncode(pubkey)}
 					</li>
-				{/each}
-			</ul>
+				</ul>
+				<li>【relay】</li>
+				<ul>
+					{#each relays as relay}
+						<li class="list">
+							{relay}
+						</li>
+					{/each}
+				</ul>
 			</details>
 		{/if}
 	</ul>
@@ -941,14 +932,7 @@
 											style="position:relative">▼</button
 										>
 									{:else}
-										<input
-											class="checkbox w-8 h-8"
-											type="checkbox"
-											bind:checked={note.isChecked}
-											on:change={() => {
-												onCleckBoxChange(tabSet, note);
-											}}
-										/>
+										<input class="checkbox w-8 h-8" type="checkbox" bind:checked={note.isChecked} />
 									{/if}
 									{#if note.isMenuOpen}
 										<PopupMenu
@@ -982,7 +966,7 @@
 {#if !nowLoading}
 	<div class="header-menu">
 		<div class="mode">mode</div>
-		
+
 		<SlideToggle
 			active="variant-ghost-primary"
 			name="toggle"
@@ -991,49 +975,46 @@
 				nClickMultiMode(isMulti);
 			}}
 		/>
-		
 	</div>
-
 {/if}
 <div class="footer-group">
 	<div class="footer-menu">
-		
 		{#if !nowLoading}
-		<div class="footer-btm">
-			{#if !isMulti}
-				<button
-					class="btn variant-soft-primary footer-btn hover:bg-blue-700 rounded-full font-bold"
-					on:click={openAddNoteDialog}>add note</button
-				>
+			<div class="footer-btm">
+				{#if !isMulti}
+					<button
+						class="btn variant-soft-primary footer-btn hover:bg-blue-700 rounded-full font-bold"
+						on:click={openAddNoteDialog}>add note</button
+					>
 
-				<button
-					class="btn variant-soft-primary hover:bg-blue-700 footer-btn rounded-full font-bold"
-					on:click={openEditTagDialog}>edit tag</button
-				>
-			{:else}
-				<button
-					class="btn variant-soft-secondary footer-btn hover:bg-blue-700 rounded-full font-bold"
-					on:click={openTagListDialog}>move notes</button
-				>
-				<button
-					class="btn variant-soft-warning hover:bg-orange-700 footer-btn rounded-full font-bold"
-					on:click={clickDeleteNotes}>delete notes</button
-				>
-			{/if}
-		</div>
+					<button
+						class="btn variant-soft-primary hover:bg-blue-700 footer-btn rounded-full font-bold"
+						on:click={openEditTagDialog}>edit tag</button
+					>
+				{:else}
+					<button
+						class="btn variant-soft-secondary footer-btn hover:bg-blue-700 rounded-full font-bold"
+						on:click={openTagListDialog}>move notes</button
+					>
+					<button
+						class="btn variant-soft-warning hover:bg-orange-700 footer-btn rounded-full font-bold"
+						on:click={clickDeleteNotes}>delete notes</button
+					>
+				{/if}
+			</div>
 		{:else}
 			<div class="progress">
 				<ProgressRadial ... stroke={100} meter="stroke-primary-500" track="stroke-primary-500/30" />
 			</div>
 		{/if}
-	
+
 		{#if !nowLoading && viewItem != undefined && Object.keys(viewItem).length > 0 && viewItem[tabSet].length > 50}
 			<Paginator
 				settings={paging}
 				on:page={onPageChange}
 				on:amount={onAmountChange}
-				justify=	'justify-between'
-				select='hidden'
+				justify="justify-between"
+				select="hidden"
 				buttonClasses="btn-icon variant-ghost-tertiary footer-btn  rounded-full font-bold"
 			/>
 		{/if}
@@ -1121,16 +1102,15 @@
 		z-index: 100;
 	}
 
-
 	.header-menu {
 		border: solid 1px rgb(88, 88, 88);
 		border-radius: 0.5em;
-		padding: 0 0.2em ;
+		padding: 0 0.2em;
 		background-color: rgba(47, 52, 68, 0.822);
 		display: block;
 		position: fixed;
 		text-align: center;
-	
+
 		right: 5px;
 		top: 5px;
 		z-index: 100;
@@ -1141,7 +1121,6 @@
 	}
 	.footer-btn {
 		margin: 5px;
-	
 	}
 
 	.content {
@@ -1158,20 +1137,19 @@
 	}
 	.panel {
 		margin-top: -1em;
-		 max-height: calc(100vh - 7em); /*表示範囲の高さを指定 */
+		max-height: calc(100vh - 7em); /*表示範囲の高さを指定 */
 		overflow-y: scroll; /* 縦方向にスクロール可能にする */
 	}
 	.br {
 		padding-bottom: 3em;
 	}
-	.footer-btm{
-		margin-top:auto;
-		margin-bottom:0;
+	.footer-btm {
+		margin-top: auto;
+		margin-bottom: 0;
 	}
 
-	.mode{
-	
-  align-items: flex-end;
-  font-size: smaller;
+	.mode {
+		align-items: flex-end;
+		font-size: smaller;
 	}
 </style>
