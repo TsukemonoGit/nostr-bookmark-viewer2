@@ -62,7 +62,6 @@
 	}
 	.move{
 		border: solid 1px rgb(88, 88, 88);
-		background-color: black;
 	}
 
 	.move-list {
@@ -79,7 +78,8 @@
 		background-color: rgba(205, 231, 255, 0.596);
 	}
 	.move-to{
-		margin:0.5em 3em;
+		padding:0.5em 3em;
 		font-weight: bold;
+		background-color: black;
 	}
 </style>
