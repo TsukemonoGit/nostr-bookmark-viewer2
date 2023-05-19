@@ -1135,8 +1135,7 @@
 	}
 	.footer-btn {
 		margin: 5px;
-		font-weight: bold;
-		text-shadow: 0.1em 0.1em 0.1em darkblue 
+	
 	}
 
 	.content {

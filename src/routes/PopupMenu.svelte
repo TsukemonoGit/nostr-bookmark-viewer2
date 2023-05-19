@@ -64,7 +64,7 @@
 				{#each filteredTabList as item}
 					<li>
 						<button
-							class=" btn1 btn variant-ghost-secondary"
+							class=" btn1 btn "
 							on:click={(event) => {
 								event.stopPropagation();
 								onClickMoveMenu(item);
@@ -113,6 +113,8 @@
 		width: 100%;
 		border-radius: 0%;
 		font-weight: bold;
-		text-shadow: 0.1em 0.1em 0.1em darkblue 
+		color:black;
+		background-color:rgba(205, 231, 255, 0.596);
+		 /* text-shadow: 0.1em 0.1em 0em blue , -0.1em 0.1em 0em lightskyblue , -0.1em -0.1em 0em lightskyblue , 0.1em -0.1em 0em lightskyblue */
 	}
 </style>
