@@ -112,7 +112,7 @@
 	.btn1 {
 		width: 100%;
 		border-radius: 0%;
-		color:white;
-		text-shadow: 1px 1px 2px rgb(0, 0, 0);
+		font-weight: bold;
+		text-shadow: 1px 1px 0px black , 1px -1px 0px black, -1px -1px 0px black, -1px 1px 0px black
 	}
 </style>
