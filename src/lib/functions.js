@@ -9,7 +9,7 @@ import { null_to_empty } from 'svelte/internal';
  */
 export async function getBookmarks(author, relays) {
 
-    
+
 
     const filter = [{
         kinds: [30001],
@@ -333,10 +333,24 @@ export async function removeEvent(hexid, _event, relays) {
 
     //----------------------------------------------------
     if (typeof hexid == 'string') {
-        tags = tags.filter(tags => tags[1] !== hexid);
+        let foundIndex = -1;
+        for (let i = 0; i < tags.length; i++) {
+            if (tags[i][1] === hexid) {
+                foundIndex = i;
+                break;
+            }
+        }
+        if (foundIndex !== -1) {
+            tags.splice(foundIndex, 1);
+        }
     } else {
-        hexid.forEach(id => {
-            tags = tags.filter(tags => tags[1] !== id);
+        let removed = false;
+        tags = tags.filter(tag => {
+          if (!removed && hexid.includes(tag[1])) {
+            removed = true;
+            return false;
+          }
+          return true;
         });
     }
     try {
